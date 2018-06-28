@@ -1,5 +1,5 @@
 Features:
- View previous versions
+- View previous versions
     - Can view and operate on previous version (i.e. commits) using 'git checkout'
     - https://stackoverflow.com/questions/30983500/how-to-save-changes-when-in-detached-head-state
 - Revert to previous versions
@@ -9,14 +9,19 @@ Features:
 - Changes to files are automatically committed upon the change occurring
 
 Structure:
-- Main program loop (monitors state of files and makes necessary commits)
-- Repo management interface
-- Version viewing/reversion GUI
+- Main program loop - gitbox.py (monitors state of files and makes necessary commits)
+- Repo management interface - manager.py
+- Version viewing/reversion GUI - gui.py
 
 Tools:
 - GitPython (git interface)
-- PyInstaller (application bundler)
+- PyInstaller (application bundler) (https://pyinstaller.readthedocs.io/en/v3.3.1/)
 - PyQt (GUI)
+
+Plan:
+1. Implement repo management interface
+2. 
+3. 
 
 Long-running Python processes: 
 https://www.reddit.com/r/Python/comments/2z63n1/memory_running_a_python_script_infinitely/

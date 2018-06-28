@@ -1,0 +1,24 @@
+Features:
+ View previous versions
+    - Can view and operate on previous version (i.e. commits) using 'git checkout'
+    - https://stackoverflow.com/questions/30983500/how-to-save-changes-when-in-detached-head-state
+- Revert to previous versions
+    - This 'reversion' may consist of:
+        - Revert to previous file version and delete 'upstream'/later versions
+- New files are automatically staged and committed
+- Changes to files are automatically committed upon the change occurring
+
+Structure:
+- Main program loop (monitors state of files and makes necessary commits)
+- Repo management interface
+- Version viewing/reversion GUI
+
+Tools:
+- GitPython (git interface)
+- PyInstaller (application bundler)
+- PyQt (GUI)
+
+Long-running Python processes: 
+https://www.reddit.com/r/Python/comments/2z63n1/memory_running_a_python_script_infinitely/
+Restart process:
+http://code.activestate.com/recipes/576911-keep-a-process-up-and-running/

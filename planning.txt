@@ -14,7 +14,7 @@ Structure:
 - Version viewing/reversion GUI - gui.py
 
 Tools:
-- GitPython (git interface)
+- sh (git interface)
 - PyInstaller (application bundler) (https://pyinstaller.readthedocs.io/en/v3.3.1/)
 - PyQt (GUI)
 
@@ -27,3 +27,7 @@ Long-running Python processes:
 https://www.reddit.com/r/Python/comments/2z63n1/memory_running_a_python_script_infinitely/
 Restart process:
 http://code.activestate.com/recipes/576911-keep-a-process-up-and-running/
+Git python modules:
+https://stackoverflow.com/questions/1456269/python-git-module-experience
+Port sh to Windows:
+https://stackoverflow.com/questions/28618906/porting-sh-1-11-based-code-to-windows

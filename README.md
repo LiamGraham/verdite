@@ -11,4 +11,4 @@ directory (not unlike products like Google Drive and Dropbox). Users may view pr
 versions of files and restore them, if desired.
 
 ## Built With
-* [sh])(https://amoffat.github.io/sh/) - Python subprocess interface used to execute git commands
+* [sh](https://amoffat.github.io/sh/) - Python subprocess interface used to execute git commands

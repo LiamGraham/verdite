@@ -51,9 +51,9 @@ class FileManager:
         self.repo_path = repo_path
         self.temp_path = "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
 
-    def commit_changes(self):
+    def store_changes(self):
         """
-        Commits all changes and returns list of files that were successfully committed.
+        Stores all changes and returns list of files that were successfully committed.
 
         Returns: list(str): all files that were committed
         """
@@ -61,12 +61,12 @@ class FileManager:
         committed = []
         verbose_codes = {"M": "modify", "A": "add", "D": "delete"}
         for change in changes:
+            codes = change[0]
+            file_path = change[1]
+            actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
+            message = f"{actions} {file_path}"
             try:
-                codes = change[0]
-                file_path = change[1]
                 self.repo.add(file_path)
-                actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
-                message = f"{actions} {file_path}"
                 self.repo.commit(m=message)
                 committed.append(file_path)
             except Exception:

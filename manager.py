@@ -41,7 +41,26 @@ class FileManager:
         pass
 
     def commit_changes(self):
+        """
+        Commits all changes and returns list of files that were successfully committed.
+
+        Returns: list(str): all files that were committed
+        """
         changes = self.get_changes()
+        committed = []
+        verbose_codes = {"M": "modify", "A": "add", "D": "delete"}
+        for change in changes:
+            try:
+                codes = change[0]
+                file_name = change[1]
+                sh.git.add(file_name)
+                actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
+                message = f"{actions} {file_name}"
+                sh.git.commit(m=message)
+                committed.append(file_name)
+            except Exception:
+                continue
+        return committed
 
     def get_changes(self):
         """
@@ -72,5 +91,7 @@ class FileManager:
             changes.append((codes, line[1]))
         return changes
 
+
 m = FileManager()
 print(m.get_changes())
+print(m.commit_changes())

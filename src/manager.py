@@ -173,6 +173,17 @@ class FileManager:
             print(f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}")
 
 
+    def has_changed(self):
+        """
+        Returns true if changes to files have occurred, that is, the stored state of
+        files differs from the current state.
+
+        Returns: boolean: true if changes to files have occurred
+        """
+        return len(self.repo.status("-s").split("\n")[0]) > 0
+
+
 m = FileManager("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
-print(m.get_file_versions("file.txt"))
-m.revert_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 15)
+# print(m.get_file_versions("file.txt"))
+# m.revert_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 15)
+print(m.has_changed())

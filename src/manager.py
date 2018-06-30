@@ -35,7 +35,7 @@ except ImportError:
 
 import time
 import os
-
+import shutil
 
 class FileManager:
     def __init__(self, repo_path):
@@ -48,7 +48,8 @@ class FileManager:
         self.repo = sh.git.bake(
             _cwd=repo_path
         )
-        print(self.repo.log("--oneline", "file.txt"))
+        self.repo_path = repo_path
+        self.temp_path = "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
 
     def commit_changes(self):
         """
@@ -62,12 +63,12 @@ class FileManager:
         for change in changes:
             try:
                 codes = change[0]
-                file_name = change[1]
-                self.repo.add(file_name)
+                file_path = change[1]
+                self.repo.add(file_path)
                 actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
-                message = f"{actions} {file_name}"
+                message = f"{actions} {file_path}"
                 self.repo.commit(m=message)
-                committed.append(file_name)
+                committed.append(file_path)
             except Exception:
                 continue
         return committed
@@ -101,7 +102,7 @@ class FileManager:
             changes.append((codes, line[1]))
         return changes
 
-    def get_file_versions(self, file_name):
+    def get_file_versions(self, file_path):
         """
         Returns all versions of given file, in order of most recent to least recent
         (even if file has been renamed). The version list consists of pairs of
@@ -110,11 +111,11 @@ class FileManager:
         [(commit0, message0), (commit1, message1), ..., (commitN, messageN)]
 
         Arguments:
-            file_name (str): name of file for which versions will be retrieved
+            file_path (str): path of file for which versions will be retrieved
 
         Returns (list(str)): all versions of given file
         """
-        file_log = self.repo.log("--follow", "--oneline", "test.docx").split("\n")
+        file_log = self.repo.log("--follow", "--oneline", file_path).split("\n")
         versions = []
         for commit in file_log:
             if not commit:
@@ -123,12 +124,12 @@ class FileManager:
             versions.append((commit[0], " ".join(commit[1:])))
         return versions
 
-    def view_file_version(self, file_name, version_num):
+    def view_file_version(self, file_path, version_num):
         """
         Open given version of given file. 
         
         Arguments:
-            file_name (str): name of file
+            file_path (str): path of file
             version_num (int): number of version to be retrieved
 
         Notes:
@@ -139,13 +140,20 @@ class FileManager:
         1. View prior version of specific file - git checkout <hash> <file>
         2. Return to current version - git checkout -- <file>
         """
-        versions = self.get_file_versions(file_name)
+        versions = self.get_file_versions(file_path)
         if version_num >= len(versions):
             return
-        target_ver = versions[version_num - 1]
-        self.repo.checkout(target_ver[0], file_name)
-        os.startfile(file_name)
-        self.repo.checkout("--", file_name)
+        target_ver = versions[-version_num]
+        print(f"Target version: {target_ver}")
+        try:
+            self.repo.checkout(target_ver[0], file_path)
+            shutil.copy2(file_path, self.temp_path)
+            os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")
+            self.repo.reset("HEAD", file_path)
+            self.repo.checkout("--", file_path)
+        except:
+            # Unable to identify appropriate error/exception, therefore one has not been provided
+            print(f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}")
 
     def revert_file_version(self):
         """
@@ -158,5 +166,5 @@ class FileManager:
 
 
 m = FileManager("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
-print(m.get_file_versions("test.docx"))
-m.view_file_version("file.txt", 2)
+print(m.get_file_versions("file.txt"))
+m.view_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 14)

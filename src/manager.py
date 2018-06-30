@@ -91,7 +91,11 @@ class FileManager:
             changes.append((codes, line[1]))
         return changes
 
+    def view_file_version(self):
+        pass
+
+    def revert_file_version(self):
+        pass
 
 m = FileManager()
 print(m.get_changes())
-print(m.commit_changes())

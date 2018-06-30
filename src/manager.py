@@ -141,10 +141,9 @@ class FileManager:
         2. Return to current version - git checkout -- <file>
         """
         versions = self.get_file_versions(file_path)
-        if version_num >= len(versions):
+        if version_num >= len(versions) or version_num < 1:
             return
         target_ver = versions[-version_num]
-        print(f"Target version: {target_ver}")
         try:
             self.repo.checkout(target_ver[0], file_path)
             shutil.copy2(file_path, self.temp_path)
@@ -155,16 +154,25 @@ class FileManager:
             # Unable to identify appropriate error/exception, therefore one has not been provided
             print(f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}")
 
-    def revert_file_version(self):
+    def revert_file_version(self, file_path, version_num):
         """
         1. View prior version of specific file - git checkout <hash> <file>
         2. Commit changes
 
         Retains commit history. 
         """
-        pass
+        versions = self.get_file_versions(file_path)
+        if version_num >= len(versions) or version_num < 1:
+            return
+        target_ver = versions[-version_num]
+        try:
+            self.repo.checkout(target_ver[0], file_path)
+            self.repo.commit(m=f'Restore "{target_ver[1]}"')
+        except:
+            # Unable to identify appropriate error/exception, therefore one has not been provided
+            print(f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}")
 
 
 m = FileManager("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
 print(m.get_file_versions("file.txt"))
-m.view_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 14)
+m.revert_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 15)

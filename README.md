@@ -1,3 +1,14 @@
 # file-control
 
-A git-powered automatic version control tool. 
+A git-powered automatic version control tool for non-programmers.
+
+(Currently in development)
+
+## Summary
+
+file-control (working name) automatically detects and stores changes made to files stored in a dedicated
+directory (not unlike products like Google Drive and Dropbox). Users may view prior
+versions of files and restore them, if desired.
+
+## Built With
+* [sh])(https://amoffat.github.io/sh/) - Python subprocess interface used to execute git commands

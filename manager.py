@@ -17,6 +17,8 @@ repo = git.bake(_cwd='C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo'
 print(repo.add('test.docx'))
 print(repo.commit(m='Commit message'))
 print(git.status())
+
+git.status("-s") // Status output in short format
 """
 
 try:
@@ -24,18 +26,51 @@ try:
 except ImportError:
     # fallback: emulate the sh API with pbs
     import pbs
+
     class Sh(object):
         def __getattr__(self, attr):
             return pbs.Command(attr)
-    sh = Sh()
 
-print(help(sh.git))
+    sh = Sh()
 
 import time
 
-class FileManager:
 
+class FileManager:
     def __init__(self):
         pass
 
+    def commit_changes(self):
+        changes = self.get_changes()
 
+    def get_changes(self):
+        """
+        Returns the changes made to files and the code corresponding to the change, in
+        the form:
+        
+        [([code0A, code0B, ...], change0), ([code1A, code1B], change1)]
+
+        Returns: list(tuple(list(str), str)): changes made to files
+
+        Status codes:
+        - M: modified
+        - A: added
+        - D: deleted
+        - ??: untracked
+
+        Codes can be combined if multiple actions have been performed on a single file
+        and the file is tracked (i.e. AM for added then modified, AD for added then
+        deleted, and MD for modified then deleted)
+        """
+        changes = []
+        status = sh.git.status("-s").split("\n")
+        for line in status:
+            if not line:
+                continue
+            line = line.split()
+            codes = list(line[0]) if line[0] != "??" else ["??"]
+            changes.append((codes, line[1]))
+        return changes
+
+m = FileManager()
+print(m.get_changes())

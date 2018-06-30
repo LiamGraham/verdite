@@ -33,3 +33,5 @@ Port sh to Windows:
 https://stackoverflow.com/questions/28618906/porting-sh-1-11-based-code-to-windows
 Store .git directory outside of the working directory:
 https://stackoverflow.com/questions/505467/can-i-store-the-git-folder-outside-the-files-i-want-tracked
+Hide Windows files and directories:
+https://stackoverflow.com/questions/19622133/set-hide-attribute-on-folders-in-windows-os

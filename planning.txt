@@ -20,8 +20,8 @@ Tools:
 
 Plan:
 1. Implement repo management interface
-2. 
-3. 
+2. Implement main program loop
+3. Implement user interface
 
 Long-running Python processes: 
 https://www.reddit.com/r/Python/comments/2z63n1/memory_running_a_python_script_infinitely/

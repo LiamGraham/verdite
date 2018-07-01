@@ -31,6 +31,9 @@ class VersionInterface(QWidget):
                 - Versions may be opened or restored by selecting desired version
             - Settings
 
+        Use 'git ls-files --cached' to retrieve list of all cached files. May be used to
+        determine if file selected using file dialog is version controlled. 
+
         Arguments:
             manager (manage.FileManager): interface for target directory/repo
         """

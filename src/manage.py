@@ -20,15 +20,20 @@ class FileManager:
     version control.
     """
 
-    def __init__(self, repo_path):
+    def __init__(self, dir_path):
         """
-        Creates new FileManager for repository at given path.
+        Creates new FileManager for directory at given path. 
 
         Arguments:
-            repo_path (str): path of target repository
+            dir_path (str): path of target directory
         """
-        self.repo = sh.git.bake(_cwd=repo_path)
-        self.repo_path = repo_path
+        self.repo = sh.git.bake(_cwd=dir_path)
+        try:
+            self.repo("rev-parse", "--is-inside-work-tree")
+        except pbs.ErrorReturnCode:
+            raise InvalidDirectoryError("Target directory is not a repository")
+
+        self.dir_path = dir_path
         self.temp_path = (
             "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
         )
@@ -52,8 +57,7 @@ class FileManager:
                 self.repo.add(file_path)
                 self.repo.commit(m=message)
                 committed.append(file_path)
-            except:
-                # Unable to identify appropriate error/exception, therefore one has not been provided
+            except pbs.ErrorReturnCode:
                 continue
         return committed
 
@@ -72,9 +76,9 @@ class FileManager:
         - D: deleted
         - ??: untracked
 
-        Codes can be combined if multiple actions have been performed on a single file
+        Codes are combined if multiple actions have been performed on a single file
         and the file is tracked (i.e. AM for added then modified, AD for added then
-        deleted, and MD for modified then deleted)
+        deleted, and MD for modified then deleted).
         """
         changes = []
         status = self.repo.status("-s").split("\n")
@@ -89,10 +93,8 @@ class FileManager:
     def get_file_versions(self, file_path):
         """
         Returns all versions of given file, in order of most recent to least recent
-        (even if file has been renamed). The version list consists of pairs of
-        corresponding commit hashes and commit messages, in the form:
-
-        [(commit0, message0), (commit1, message1), ..., (commitN, messageN)]
+        (even if file has been renamed). The version list consists of VersionData objects
+        storing the the commit hashes, commit messages and commit dates.
 
         Arguments:
             file_path (str): path of file for which versions will be retrieved
@@ -104,8 +106,9 @@ class FileManager:
         for commit in file_log:
             if not commit:
                 continue
-            commit = commit.split()
-            versions.append((commit[0], " ".join(commit[1:])))
+            log_entry = commit.split() # Log entry is in form "<hash> <message>"
+            datetime = self.repo.show('--pretty=format:"%cd"', '--no-patch', commit[0])
+            versions.append(VersionData(log_entry[0], " ".join(log_entry[1:]), datetime))
         return versions
 
     def view_file_version(self, file_path, version_num):
@@ -122,13 +125,12 @@ class FileManager:
             return
         target_ver = versions[-version_num]
         try:
-            self.repo.checkout(target_ver[0], file_path)
+            self.repo.checkout(target_ver.c_hash, file_path)
             shutil.copy2(file_path, self.temp_path)
             os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")
             self.repo.reset("HEAD", file_path)
             self.repo.checkout("--", file_path)
-        except:
-            # Unable to identify appropriate error/exception, therefore one has not been provided
+        except pbs.ErrorReturnCode:
             print(
                 f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}"
             )
@@ -148,8 +150,7 @@ class FileManager:
         try:
             self.repo.checkout(target_ver[0], file_path)
             self.repo.commit(m=f'Restore "{target_ver[1]}"')
-        except:
-            # Unable to identify appropriate error/exception, therefore one has not been provided
+        except pbs.ErrorReturnCode:
             print(
                 f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}"
             )
@@ -178,3 +179,18 @@ class FileManager:
             if change[1] == file_path:
                 return change[0]
         return None
+
+
+@dataclass
+class VersionData:
+    c_hash: str
+    message: str
+    datetime: str
+        
+
+class InvalidDirectoryError(Exception):
+    """
+    Exception raised when target directory is not a valid repository.
+    """
+    def __init__(self, message):
+        super().__init__(message)

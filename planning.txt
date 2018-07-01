@@ -38,3 +38,5 @@ https://stackoverflow.com/questions/505467/can-i-store-the-git-folder-outside-th
 Hide Windows files and directories:
 https://stackoverflow.com/questions/19622133/set-hide-attribute-on-folders-in-windows-os'
 https://github.com/dwoctor/hide-or-unhide-a-directory-python/blob/master/3x.py
+PyQt5 GUI tutorial:
+http://zetcode.com/gui/pyqt5/firstprograms/

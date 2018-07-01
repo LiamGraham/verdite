@@ -12,6 +12,7 @@ except ImportError:
 
 import os
 import shutil
+import dataclasses
 
 
 class FileManager:
@@ -48,7 +49,9 @@ class FileManager:
         committed = []
         verbose_codes = {"M": "modify", "A": "add", "D": "delete"}
         for change in changes:
-            codes, file_path = change
+            print(f"Change: {change}")
+            codes = change.codes
+            file_path = change.file_path
             if "??" in codes:
                 codes = self._stage_changes(file_path)
             actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
@@ -63,12 +66,10 @@ class FileManager:
 
     def get_changes(self):
         """
-        Returns the changes made to files and the code corresponding to the change, in
-        the form:
-        
-        [([code0A, code0B, ...], file0), ([code1A, code1B, ...], file1), ...]
+        Returns the changes made to files and the code corresponding to the change in
+        the form of ChangeData objects.
 
-        Returns: list(tuple(list(str), str)): changes made to files
+        Returns (ChangeData): changes made to files
 
         Status codes:
         - M: modified
@@ -86,8 +87,12 @@ class FileManager:
             if not line:
                 continue
             line = line.split()
+            print(f"Line: {line}")
             codes = list(line[0]) if line[0] != "??" else ["??"]
-            changes.append((codes, line[1]))
+            # git encloses file names containing spaces with double quotes
+            # Must remove quotes so file names can be matched
+            file_path = " ".join(line[1:]).replace('"', '')
+            changes.append(ChangeData(codes, file_path))
         return changes
 
     def get_file_versions(self, file_path):
@@ -173,20 +178,32 @@ class FileManager:
 
         Returns (list(str)): code corresponding to change 
         """
+        print(f"File path: {file_path}")
         self.repo.add(file_path)
         changes = self.get_changes()
         for change in changes:
-            if change[1] == file_path:
-                return change[0]
+            if change.file_path == file_path:
+                return change.codes
         return None
 
 
-@dataclass
+@dataclasses.dataclass
 class VersionData:
+    """
+    Basic data class storing commit information for a specific file version.
+    """
+    # Commit hash, message, and datetime
     c_hash: str
-    message: str
+    message: str 
     datetime: str
         
+@dataclasses.dataclass
+class ChangeData:
+    """
+    Basic data class storing change information for a specific file.
+    """
+    codes: list
+    file_path: str
 
 class InvalidDirectoryError(Exception):
     """

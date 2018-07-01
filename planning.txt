@@ -9,9 +9,9 @@ Features:
 - Changes to files are automatically committed upon the change occurring
 
 Structure:
-- Main program loop - gitbox.py (monitors state of files and makes necessary commits)
-- Repo management interface - manager.py
-- Version viewing/reversion GUI - gui.py
+- Main program loop - control.py (monitors state of files and makes necessary commits)
+- Repo management interface - manage.py
+- Version viewing/restoring GUI - gui.py
 
 Tools:
 - sh (git interface)
@@ -22,6 +22,8 @@ Plan:
 1. Implement repo management interface
 2. Implement main program loop
 3. Implement user interface
+4. Assemble components into application
+5. Bundle files for distribution
 
 Long-running Python processes: 
 https://www.reddit.com/r/Python/comments/2z63n1/memory_running_a_python_script_infinitely/

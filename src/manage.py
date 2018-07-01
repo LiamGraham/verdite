@@ -45,7 +45,7 @@ class FileManager:
         for change in changes:
             codes, file_path = change
             if "??" in codes:
-                codes = self._track_change(file_path)
+                codes = self._stage_changes(file_path)
             actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
             message = f"{actions} {file_path}"
             try:
@@ -163,7 +163,7 @@ class FileManager:
         """
         return len(self.repo.status("-s").split("\n")[0]) > 0
 
-    def _track_change(self, file_path):
+    def _stage_changes(self, file_path):
         """
         Stages untracked file and returns code corresponding to change.
 

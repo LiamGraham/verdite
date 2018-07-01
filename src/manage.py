@@ -111,9 +111,11 @@ class FileManager:
         for commit in file_log:
             if not commit:
                 continue
-            log_entry = commit.split() # Log entry is in form "<hash> <message>"
-            datetime = self.repo.show('--pretty=format:"%cd"', '--no-patch', commit[0])
-            versions.append(VersionData(log_entry[0], " ".join(log_entry[1:]), datetime))
+            log_entry = commit.split()  # Log entry has form "<hash> <message>"
+            timestamp = self._get_commit_timestamp(log_entry[0])
+            versions.append(
+                VersionData(log_entry[0], " ".join(log_entry[1:]), timestamp)
+            )
         return versions
 
     def view_file_version(self, file_path, version_num):
@@ -186,16 +188,33 @@ class FileManager:
                 return change.codes
         return None
 
+    def _get_commit_timestamp(self, commit_hash):
+        """
+        Returns datetime object representing the commit date of the commit corresponding
+        to the given commit hash.
+
+        Arguments:
+            commit_hash (str): hash of commit for which timestamp will be generated
+
+        Returns (datetime.datetime): timestamp of given commit
+        """
+        date_str = str(
+            self.repo.show('--pretty=format:"%cd"', "--no-patch", commit_hash)
+        ).replace('"', "")
+        return datetime.datetime.strptime(date_str, "%a %b %d %H:%M:%S %Y %z")
+
 
 @dataclasses.dataclass
 class VersionData:
     """
     Basic data class storing commit information for a specific file version.
     """
-    # Commit hash, message, and datetime
+
+    # Commit hash, message, and timestamp
     c_hash: str
     message: str 
-    datetime: str
+    timestamp: datetime.datetime
+
         
 @dataclasses.dataclass
 class ChangeData:

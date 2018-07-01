@@ -11,4 +11,5 @@ directory (not unlike products like Google Drive and Dropbox). Users may view pr
 versions of files and restore them, if desired.
 
 ## Built With
+* [git](https://git-scm.com/) - Underlying version control system
 * [sh](https://amoffat.github.io/sh/) - Python subprocess interface used to execute git commands

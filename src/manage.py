@@ -33,7 +33,6 @@ except ImportError:
 
     sh = Sh()
 
-import time
 import os
 import shutil
 
@@ -61,15 +60,17 @@ class FileManager:
         committed = []
         verbose_codes = {"M": "modify", "A": "add", "D": "delete"}
         for change in changes:
-            codes = change[0]
-            file_path = change[1]
+            codes, file_path = change
+            if "??" in codes:
+                codes = self._track_change(file_path)
             actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
             message = f"{actions} {file_path}"
             try:
                 self.repo.add(file_path)
                 self.repo.commit(m=message)
                 committed.append(file_path)
-            except Exception:
+            except:
+                # Unable to identify appropriate error/exception, therefore one has not been provided
                 continue
         return committed
 
@@ -78,7 +79,7 @@ class FileManager:
         Returns the changes made to files and the code corresponding to the change, in
         the form:
         
-        [([code0A, code0B, ...], change0), ([code1A, code1B], change1)]
+        [([code0A, code0B, ...], file0), ([code1A, code1B, ...], file1), ...]
 
         Returns: list(tuple(list(str), str)): changes made to files
 
@@ -129,7 +130,7 @@ class FileManager:
         Open given version of given file. 
         
         Arguments:
-            file_path (str): path of file
+            file_path (str): path of target file
             version_num (int): number of version to be retrieved
 
         Notes:
@@ -154,12 +155,13 @@ class FileManager:
             # Unable to identify appropriate error/exception, therefore one has not been provided
             print(f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}")
 
-    def revert_file_version(self, file_path, version_num):
+    def restore_file_version(self, file_path, version_num):
         """
-        1. View prior version of specific file - git checkout <hash> <file>
-        2. Commit changes
+        Restores given version number of given file.
 
-        Retains commit history. 
+        Arguments:
+            file_path (str): path of target file
+            version_num (int): number of version to be restored
         """
         versions = self.get_file_versions(file_path)
         if version_num >= len(versions) or version_num < 1:
@@ -172,12 +174,27 @@ class FileManager:
             # Unable to identify appropriate error/exception, therefore one has not been provided
             print(f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}")
 
-
     def has_changed(self):
         """
         Returns true if changes to files have occurred, that is, the stored state of
         files differs from the current state.
 
-        Returns: boolean: true if changes to files have occurred
+        Returns (boolean): true if changes to files have occurred
         """
         return len(self.repo.status("-s").split("\n")[0]) > 0
+    
+    def _track_change(self, file_path):
+        """
+        Stages untracked changes and returns code corresponding to change.
+
+        Arguments:
+            file_path (str): path of file to be staged
+
+        Returns (list(str)): code corresponding to change 
+        """
+        self.repo.add(file_path)
+        changes = self.get_changes()
+        for change in changes:
+            if change[1] == file_path:
+                return change[0]
+        return None

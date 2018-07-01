@@ -181,9 +181,3 @@ class FileManager:
         Returns: boolean: true if changes to files have occurred
         """
         return len(self.repo.status("-s").split("\n")[0]) > 0
-
-
-m = FileManager("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
-# print(m.get_file_versions("file.txt"))
-# m.revert_file_version("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo\\file.txt", 15)
-print(m.has_changed())

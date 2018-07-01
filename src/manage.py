@@ -1,30 +1,7 @@
-"""
-- Add file
-- Modify file
-- Remove file
-
-Process:
-1. Change detected (i.e. file added, modified, or removed)
-2. Change staged
-3. Change committed
-
-git.Repo
-- path (path to either the root git directory or the bare git repo)
-
-Example sh.git Usage:
-git = sh.git
-repo = git.bake(_cwd='C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo')
-print(repo.add('test.docx'))
-print(repo.commit(m='Commit message'))
-print(git.status())
-
-git.status("-s") // Status output in short format
-"""
-
 try:
     import sh
 except ImportError:
-    # fallback: emulate the sh API with pbs
+    # Emulate the sh API with pbs
     import pbs
 
     class Sh(object):
@@ -36,7 +13,13 @@ except ImportError:
 import os
 import shutil
 
+
 class FileManager:
+    """
+    Interface enabling the management of the state of a repository, used for automatic
+    version control.
+    """
+
     def __init__(self, repo_path):
         """
         Creates new FileManager for repository at given path.
@@ -44,11 +27,11 @@ class FileManager:
         Arguments:
             repo_path (str): path of target repository
         """
-        self.repo = sh.git.bake(
-            _cwd=repo_path
-        )
+        self.repo = sh.git.bake(_cwd=repo_path)
         self.repo_path = repo_path
-        self.temp_path = "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
+        self.temp_path = (
+            "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
+        )
 
     def store_changes(self):
         """
@@ -127,20 +110,13 @@ class FileManager:
 
     def view_file_version(self, file_path, version_num):
         """
-        Open given version of given file. 
+        Open specified version of given file. 
         
         Arguments:
             file_path (str): path of target file
             version_num (int): number of version to be retrieved
-
-        Notes:
-        View commit history of specific file: git log --oneline <file>
-
-        Get commit date of specific commit: git show --pretty=format:"%cd" --no-patch <hash>
-
-        1. View prior version of specific file - git checkout <hash> <file>
-        2. Return to current version - git checkout -- <file>
         """
+        # Get commit date of specific commit: git show --pretty=format:"%cd" --no-patch <hash>
         versions = self.get_file_versions(file_path)
         if version_num >= len(versions) or version_num < 1:
             return
@@ -153,11 +129,13 @@ class FileManager:
             self.repo.checkout("--", file_path)
         except:
             # Unable to identify appropriate error/exception, therefore one has not been provided
-            print(f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}")
+            print(
+                f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}"
+            )
 
     def restore_file_version(self, file_path, version_num):
         """
-        Restores given version number of given file.
+        Restores specified version of given file.
 
         Arguments:
             file_path (str): path of target file
@@ -172,7 +150,9 @@ class FileManager:
             self.repo.commit(m=f'Restore "{target_ver[1]}"')
         except:
             # Unable to identify appropriate error/exception, therefore one has not been provided
-            print(f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}")
+            print(
+                f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}"
+            )
 
     def has_changed(self):
         """
@@ -182,10 +162,10 @@ class FileManager:
         Returns (boolean): true if changes to files have occurred
         """
         return len(self.repo.status("-s").split("\n")[0]) > 0
-    
+
     def _track_change(self, file_path):
         """
-        Stages untracked changes and returns code corresponding to change.
+        Stages untracked file and returns code corresponding to change.
 
         Arguments:
             file_path (str): path of file to be staged

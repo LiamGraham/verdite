@@ -122,7 +122,7 @@ class FileManager:
             )
         return versions
 
-    def view_file_version(self, file_path, version_num):
+    def open_file_version(self, file_path, version_num):
         """
         Open specified version of given file. Desired version is stored in temp folder
         and working file remains unchanged.

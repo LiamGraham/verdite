@@ -13,6 +13,7 @@ except ImportError:
 import os
 import shutil
 import dataclasses
+import datetime
 
 
 class FileManager:
@@ -52,8 +53,10 @@ class FileManager:
             print(f"Change: {change}")
             codes = change.codes
             file_path = change.file_path
+
             if "??" in codes:
                 codes = self._stage_changes(file_path)
+
             actions = " and ".join([verbose_codes[x] for x in codes]).capitalize()
             message = f"{actions} {file_path}"
             try:
@@ -61,6 +64,8 @@ class FileManager:
                 self.repo.commit(m=message)
                 committed.append(file_path)
             except pbs.ErrorReturnCode:
+                # Any git errors are ignored, enabling changes that weren't committed to
+                # be committed with the next function call
                 continue
         return committed
 
@@ -87,7 +92,6 @@ class FileManager:
             if not line:
                 continue
             line = line.split()
-            print(f"Line: {line}")
             codes = list(line[0]) if line[0] != "??" else ["??"]
             # git encloses file names containing spaces with double quotes
             # Must remove quotes so file names can be matched
@@ -120,26 +124,31 @@ class FileManager:
 
     def view_file_version(self, file_path, version_num):
         """
-        Open specified version of given file. 
+        Open specified version of given file. Desired version is stored in temp folder
+        and working file remains unchanged.
         
         Arguments:
-            file_path (str): path of target file
+            file_path (str): path of target file. Must be an absolute file path.
             version_num (int): number of version to be retrieved
         """
-        # Get commit date of specific commit: git show --pretty=format:"%cd" --no-patch <hash>
+        if not os.path.isabs(file_path):
+            raise VersionError("File path must be absolute")
+
         versions = self.get_file_versions(file_path)
         if version_num >= len(versions) or version_num < 1:
-            return
+            raise VersionError("Invalid version number")
         target_ver = versions[-version_num]
+
         try:
+            # TODO: Breaks if file had different name at given version
             self.repo.checkout(target_ver.c_hash, file_path)
             shutil.copy2(file_path, self.temp_path)
             os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")
             self.repo.reset("HEAD", file_path)
             self.repo.checkout("--", file_path)
         except pbs.ErrorReturnCode:
-            print(
-                f"Error: Unable to view version {version_num} of {os.path.split(file_path)[1]}"
+            raise VersionError(
+                f"Unable to view version {version_num} of {os.path.split(file_path)[1]}"
             )
 
     def restore_file_version(self, file_path, version_num):
@@ -152,14 +161,14 @@ class FileManager:
         """
         versions = self.get_file_versions(file_path)
         if version_num >= len(versions) or version_num < 1:
-            return
+            raise VersionError("Invalid version number")
         target_ver = versions[-version_num]
         try:
             self.repo.checkout(target_ver[0], file_path)
             self.repo.commit(m=f'Restore "{target_ver[1]}"')
         except pbs.ErrorReturnCode:
-            print(
-                f"Error: Unable to revert to version {version_num} of {os.path.split(file_path)[1]}"
+            raise VersionError(
+                f"Unable to revert to version {version_num} of {os.path.split(file_path)[1]}"
             )
 
     def has_changed(self):
@@ -212,21 +221,34 @@ class VersionData:
 
     # Commit hash, message, and timestamp
     c_hash: str
-    message: str 
+    message: str
     timestamp: datetime.datetime
 
-        
+
 @dataclasses.dataclass
 class ChangeData:
     """
     Basic data class storing change information for a specific file.
     """
+
     codes: list
     file_path: str
+
 
 class InvalidDirectoryError(Exception):
     """
     Exception raised when target directory is not a valid repository.
     """
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class VersionError(Exception):
+    """
+    Exception raised for all error cases relating to viewing and restoration of previous
+    file versions.
+    """
+
     def __init__(self, message):
         super().__init__(message)

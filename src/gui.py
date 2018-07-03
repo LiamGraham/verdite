@@ -1,12 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
 import manage
 
 
-class VersionInterface(QWidget):
-    def __init__(self, manager):
+class VersionWindow(QTabWidget):
+    def __init__(self, dir_path):
         """
         Creates a new graphical user interface enabling the viewing and restoration of
         file versions by a user.
@@ -37,17 +37,32 @@ class VersionInterface(QWidget):
         Arguments:
             manager (manage.FileManager): interface for target directory/repo
         """
-        self.manager = manager
-        super().__init__()
-        self.init_interface()
+        super(VersionWindow, self).__init__()
+        try:
+            manager = manage.FileManager(dir_path)
+        except manage.InvalidDirectoryError:
+            # Error dialog
+            pass
+        self.init_window()
 
-    def init_interface(self):
+    def init_window(self):
+        self.versions = QWidget()
+        self.settings = QWidget()
+        self.addTab(self.versions,"Versions")
+        self.addTab(self.settings,"Settings")
+    
         self.setGeometry(500, 300, 500, 500)
         self.setWindowTitle('View and Restore File Versions')
         # Uncomment when icon has been designed
         # self.setWindowIcon(QIcon('icon.png'))      
         self.center_window()  
         self.show()
+    
+    def versions_layout(self):
+        pass
+
+    def settings_layout(self):
+        pass
 
     def center_window(self):
         qr = self.frameGeometry()
@@ -55,9 +70,25 @@ class VersionInterface(QWidget):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+def launch():
+    app = QApplication(sys.argv)
+    app.setStyleSheet("""
+    QTabBar::tab:selected {
+        background: white;
+        color: rgb(55, 55, 55);
+    }
+    QTabBar::tab {
+        background: rgb(179, 179, 179);
+        color: white;
+    }
+    QTabWidget>QWidget>QWidget {
+        background: white;
+        color: rgb(55, 55, 55);
+    }
+    """)
+    gui = VersionWindow("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    gui = VersionInterface("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
-    sys.exit(app.exec_())
+    launch()
     

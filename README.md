@@ -1,4 +1,4 @@
-# file-control
+# Verdite
 
 A git-powered automatic version control tool for non-programmers.
 

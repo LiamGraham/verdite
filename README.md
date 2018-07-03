@@ -1,4 +1,5 @@
 ![Verdite Logo](https://github.com/LiamGraham/verdite/blob/master/images/logo.png)
+
 A git-powered automatic version control tool for non-programmers.
 
 (Currently in development)

@@ -247,6 +247,7 @@ class InvalidDirectoryError(Exception):
 
     def __init__(self, message):
         super().__init__(message)
+        self.message = message
 
 
 class VersionError(Exception):
@@ -257,3 +258,4 @@ class VersionError(Exception):
 
     def __init__(self, message):
         super().__init__(message)
+        self.message = message

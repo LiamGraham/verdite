@@ -1,12 +1,12 @@
 ![Verdite Logo](https://github.com/LiamGraham/verdite/blob/master/images/logo_medium.png)
 
-A git-powered automatic version control tool for non-programmers.
+A git-powered automatic version control tool for everday use.
 
 (Currently in development)
 
 ## Summary
 
-file-control (working name) automatically detects and stores changes made to files stored in a dedicated
+Verdite automatically detects and stores changes made to files stored in a dedicated
 directory (not unlike products like Google Drive and Dropbox). Users may view prior
 versions of files and restore them, if desired.
 

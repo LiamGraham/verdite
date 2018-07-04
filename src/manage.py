@@ -110,7 +110,10 @@ class FileManager:
 
         Returns (list(str)): all versions of given file
         """
-        file_log = self.repo.log("--follow", "--oneline", file_path).split("\n")
+        try:
+            file_log = self.repo.log("--follow", "--oneline", file_path).split("\n")
+        except pbs.ErrorReturnCode:
+            raise VersionError("Could not retrieve file")
         versions = []
         for commit in file_log:
             if not commit:

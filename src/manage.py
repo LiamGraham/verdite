@@ -108,7 +108,7 @@ class FileManager:
         Arguments:
             file_path (str): path of file for which versions will be retrieved
 
-        Returns (list(str)): all versions of given file
+        Returns (list(VersionData)): all versions of given file
         """
         if not os.path.realpath(file_path).startswith(self.dir_path):
             raise VersionError("File is not inside controlled directory")

@@ -110,6 +110,8 @@ class FileManager:
 
         Returns (list(str)): all versions of given file
         """
+        if not os.path.realpath(file_path).startswith(self.dir_path):
+            raise VersionError("File is not inside controlled directory")
         try:
             file_log = self.repo.log("--follow", "--oneline", file_path).split("\n")
         except pbs.ErrorReturnCode:

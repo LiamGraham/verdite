@@ -16,4 +16,7 @@ versions of files and restore them, if desired.
 
 ## Built With
 * [git](https://git-scm.com/) - Underlying version control system
-* [sh](https://amoffat.github.io/sh/) - Python subprocess interface used to execute git commands
+* [sh](https://amoffat.github.io/sh/) - Python subprocess interface used to execute git
+  commands
+* [PyQt5](https://riverbankcomputing.com/software/pyqt/intro) - Python bindings for the Qt
+  application framewo

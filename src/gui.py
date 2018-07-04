@@ -222,8 +222,7 @@ class VersionWindow(QTabWidget):
 
         self.setFixedSize(500, 500)
         self.setWindowTitle("View and Restore File Versions")
-        # Uncomment when icon has been designed
-        # self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon('images\\icon_64px.png'))
         self.centre_window()
         self.show()
 
@@ -292,7 +291,6 @@ class VersionWindow(QTabWidget):
 
 def launch():
     app = QApplication(sys.argv)
-
     app.setStyleSheet(
     """
     QTabBar::tab:selected {

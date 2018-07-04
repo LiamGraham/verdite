@@ -37,7 +37,7 @@ class FileManager:
 
         self.dir_path = dir_path
         self.temp_path = (
-            "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\file-control\\temp"
+            "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\verdite\\temp"
         )
 
     def store_changes(self):

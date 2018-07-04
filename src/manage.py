@@ -136,14 +136,7 @@ class FileManager:
             file_path (str): path of target file. Must be an absolute file path.
             version_num (int): number of version to be retrieved
         """
-        if not os.path.isabs(file_path):
-            raise VersionError("File path must be absolute")
-
-        versions = self.get_file_versions(file_path)
-        if version_num >= len(versions) or version_num < 1:
-            raise VersionError("Invalid version number")
-        target_ver = versions[-version_num]
-
+        target_ver = self._get_target_version(file_path, version_num)
         try:
             # TODO: Breaks if file had different name at given version
             self.repo.checkout(target_ver.c_hash, file_path)
@@ -164,17 +157,36 @@ class FileManager:
             file_path (str): path of target file
             version_num (int): number of version to be restored
         """
-        versions = self.get_file_versions(file_path)
-        if version_num >= len(versions) or version_num < 1:
-            raise VersionError("Invalid version number")
-        target_ver = versions[-version_num]
+        target_ver = self._get_target_version(file_path, version_num)
         try:
-            self.repo.checkout(target_ver[0], file_path)
-            self.repo.commit(m=f'Restore "{target_ver[1]}"')
-        except pbs.ErrorReturnCode:
+            self.repo.checkout(target_ver.c_hash, file_path)
+            if self.repo.status("-s"):
+                # Prevent error in case where the most recent versions is the most
+                # recent commit
+                self.repo.commit(m=f'Restore "{target_ver.message}"')
+        except pbs.ErrorReturnCode as e:
             raise VersionError(
-                f"Unable to revert to version {version_num} of {os.path.split(file_path)[1]}"
+                f"Unable to restore version {version_num} of {os.path.split(file_path)[1]}"
             )
+
+    def _get_target_version(self, file_path, version_num):
+        """
+        Validates given file path and version number and returns target version. Used
+        for both version viewing and restoration.
+
+        Arguments:
+            file_path (str): path of target file
+            version_num (int): number of target version
+        
+        Returns (VersionData): data for target version
+        """
+        if not os.path.isabs(file_path):
+            raise VersionError("File path must be absolute")
+
+        versions = self.get_file_versions(file_path)
+        if version_num > len(versions) or version_num < 1:
+            raise VersionError("Invalid version number")
+        return versions[-version_num]
 
     def has_changed(self):
         """

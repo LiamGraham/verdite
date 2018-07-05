@@ -140,7 +140,7 @@ class FileManager:
         try:
             # TODO: Breaks if file had different name at given version
             self.repo.checkout(target_ver.c_hash, file_path)
-            shutil.copy2(file_path, self.temp_path)
+            shutil.copy(file_path, self.temp_path)
             os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")
             self.repo.reset("HEAD", file_path)
             self.repo.checkout("--", file_path)

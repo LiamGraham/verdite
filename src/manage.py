@@ -66,6 +66,7 @@ class FileManager:
             except pbs.ErrorReturnCode:
                 # Any git errors are ignored, enabling changes that weren't committed to
                 # be committed with the next function call
+                self.repo.reset("HEAD", file_path)
                 continue
         return committed
 

@@ -5,12 +5,13 @@ from PyQt5.QtCore import *
 import os.path
 import textwrap
 from functools import partial
+import configparser
 
 import manage
 
 
 class VersionWindow(QTabWidget):
-    def __init__(self, dir_path):
+    def __init__(self):
         """
         Creates a new graphical user interface enabling the viewing and restoration of
         file versions by a user.
@@ -42,11 +43,17 @@ class VersionWindow(QTabWidget):
             manager (manage.FileManager): interface for target directory/repo
         """
         super(VersionWindow, self).__init__()
+
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        dir_path = config["DIRECTORIES"]["Main"]
+        temp_path = config["DIRECTORIES"]["Temp"]
         try:
-            self.manager = manage.FileManager(dir_path)
+            self.manager = manage.FileManager(dir_path, temp_path)
         except manage.InvalidDirectoryError as e:
             self.show_error_dialog(e.message)
             # TODO: Prompt to change to valid directory
+
         self.init_window()
 
     def init_window(self):
@@ -61,7 +68,7 @@ class VersionWindow(QTabWidget):
 
         self.setFixedSize(500, 500)
         self.setWindowTitle("View and Restore File Versions")
-        self.setWindowIcon(QIcon('images\\icon_64px.png'))
+        self.setWindowIcon(QIcon("images\\icon_500px_transparent.png"))
         self.centre_window()
         self.show()
 
@@ -75,10 +82,11 @@ class VersionWindow(QTabWidget):
         self.move(q_rect.topLeft())
 
 
-class VersionsTab(QWidget):
+class AbstractTab(QWidget):
     """
-    Tab containing version viewing and restoration interface.
+    Abstract tab class containing general tab methods.
     """
+
     def __init__(self, parent, manager):
         """
         Creates a new QWidget instance having the given parent and utilising the given
@@ -90,6 +98,71 @@ class VersionsTab(QWidget):
         """
         super(QWidget, self).__init__(parent)
         self.manager = manager
+
+    def get_truncated_file_name(self):
+        file_name = os.path.splitext(os.path.basename(self.current_file))[0]
+        return (
+            file_name[:15]
+            + (file_name[15:] and "[...]")
+            + os.path.splitext(self.current_file)[1]
+        )
+
+    def show_error_dialog(self, message):
+        """
+        Shows error dialog displaying the given message.
+        """
+        self.set_status("")
+        error_dialog = QMessageBox()
+        error_dialog.setText(message)
+        error_dialog.setWindowTitle("Error")
+        error_dialog.setIcon(QMessageBox.Warning)
+        error_dialog.exec_()
+
+    def show_confirmation_dialog(self, message):
+        """
+        Shows confirmation dialog displaying the given message and returns True if user
+        selects the 'Ok' button.
+
+        Returns (bool): True if user selects 'Ok' button
+        """
+        confirm_dialog = QMessageBox()
+        confirm_dialog.setText(message)
+        confirm_dialog.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        confirm_dialog.setDefaultButton(QMessageBox.Cancel)
+        confirm_dialog.setIcon(QMessageBox.Question)
+        choice = confirm_dialog.exec_()
+        return choice == QMessageBox.Ok
+
+    def remove_layout_contents(self, layout):
+        for i in reversed(range(layout.count())):
+            item = layout.takeAt(i)
+            item.widget().deleteLater()
+            del (item)
+
+    def generate_separators(self, num):
+        separators = []
+        for i in range(0, num):
+            separators.append(QFrame())
+            separators[i].setFrameShape(QFrame.HLine)
+            separators[i].setFrameShadow(QFrame.Plain)
+        return separators
+
+
+class VersionsTab(AbstractTab):
+    """
+    Tab containing version viewing and restoration interface.
+    """
+
+    def __init__(self, parent, manager):
+        """
+        Creates a new tab widget instance having the given parent and utilising the given
+        manager.
+        
+        Arguments:
+            parent (QWidget): parent of this widget
+            manager (manage.FileManager): file management interface
+        """
+        super().__init__(parent, manager)
         self.current_file = ""
         self.version_rows = []
         self.version_data = []
@@ -123,9 +196,7 @@ class VersionsTab(QWidget):
         try:
             self.manager.open_file_version(self.current_file, version_num)
             file_name = self.get_truncated_file_name()
-            self.set_status(
-                f"Opened version {version_num} of '{file_name}'"
-            )
+            self.set_status(f"Opened version {version_num} of '{file_name}'")
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
 
@@ -146,36 +217,6 @@ class VersionsTab(QWidget):
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
 
-    def get_truncated_file_name(self):
-        file_name = os.path.splitext(os.path.basename(self.current_file))[0]
-        return file_name[:15] + (file_name[15:] and '[...]') + os.path.splitext(self.current_file)[1]
-
-    def show_error_dialog(self, message):
-        """
-        Shows error dialog displaying the given message.
-        """
-        self.set_status("")
-        error_dialog = QMessageBox()
-        error_dialog.setText(message)
-        error_dialog.setWindowTitle("Error")
-        error_dialog.setIcon(QMessageBox.Warning)
-        error_dialog.exec_()
-
-    def show_confirmation_dialog(self, message):
-        """
-        Shows confirmation dialog displaying the given message and returns True if user
-        selects the 'Ok' button.
-
-        Returns (bool): True if user selects 'Ok' button
-        """
-        confirm_dialog = QMessageBox()
-        confirm_dialog.setText(message)
-        confirm_dialog.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        confirm_dialog.setDefaultButton(QMessageBox.Cancel)
-        confirm_dialog.setIcon(QMessageBox.Question)
-        choice = confirm_dialog.exec_()
-        return choice == QMessageBox.Ok
-
     def set_status(self, message):
         self.status_label.setText(message)
 
@@ -193,8 +234,6 @@ class VersionsTab(QWidget):
             view_button = QPushButton("View")
             restore_button = QPushButton("Restore")
 
-            view_button.setFixedWidth(30)
-            restore_button.setFixedWidth(30)
             view_button.clicked.connect(partial(self.view_version, version_num))
             restore_button.clicked.connect(partial(self.restore_version, version_num))
             row.addWidget(label)
@@ -216,12 +255,6 @@ class VersionsTab(QWidget):
             x.deleteLater()
             del (x)
         self.version_rows.clear()
-
-    def remove_layout_contents(self, layout):
-        for i in reversed(range(layout.count())):
-            item = layout.takeAt(i)
-            item.widget().deleteLater()
-            del (item)
 
     def select_file(self):
         """
@@ -273,7 +306,7 @@ class VersionsTab(QWidget):
         refresh_button.clicked.connect(partial(self.update_version_list, True))
         refresh_button.setFixedWidth(60)
 
-        version_widget = QWidget()
+        version_container = QWidget()
         self.version_layout = QVBoxLayout()
         self.version_layout.addStretch()
         self.version_layout.setAlignment(Qt.AlignTop)
@@ -281,13 +314,13 @@ class VersionsTab(QWidget):
         no_files_row.addWidget(QLabel("No file selected"))
         self.version_rows.append(no_files_row)
         self.version_layout.insertLayout(0, self.version_rows[0])
-        version_widget.setLayout(self.version_layout)
+        version_container.setLayout(self.version_layout)
 
         scroll_area = QScrollArea()
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(version_widget)
+        scroll_area.setWidget(version_container)
         scroll_area.setVerticalScrollBar(QScrollBar())
 
         grid.addWidget(self.file_text, 0, 0)
@@ -302,102 +335,155 @@ class VersionsTab(QWidget):
         self.setLayout(grid)
 
 
-class SettingsTab(QWidget):
+class SettingsTab(AbstractTab):
     """
     Tab containing settings interface.
+
+    - Select folder/s to be version controlled
+    - Pause/start version control
+    - Configure file types to be tracked (e.g. file category checkboxes, ignore list)
+    - Set interval for storage of changes
     """
+
     def __init__(self, parent, manager):
         """
-        Creates a new QWidget instance having the given parent and utilising the given
+        Creates a new tab widget instance having the given parent and utilising the given
         manager.
         
         Arguments:
             parent (QWidget): parent of this widget
             manager (manage.FileManager): file management interface
         """
-        super(QWidget, self).__init__(parent)
-        self.manager = manager
+        super().__init__(parent, manager)
+        self.config = configparser.ConfigParser()
+        self.config_name = "config.ini"
         self.init_layout()
 
     def init_layout(self):
-        pass
+        self.config.read(self.config_name)
+        settings_layout = QVBoxLayout()
+        settings_layout.setAlignment(Qt.AlignTop)
 
+        general_layout = QHBoxLayout()
+        general_layout.setAlignment(Qt.AlignLeft)
+        folder_heading = QLabel("General")
+        folder_heading.setObjectName("heading")
+        folder_label = QLabel(f"Folder location:")
+        dir_label = QLabel(self.manager.dir_path)
+        dir_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        general_layout.addWidget(folder_label)
+        general_layout.addWidget(dir_label)
+
+        self.active_checkbox = QCheckBox("Track changes to files in this folder")
+        self.active_checkbox.toggled.connect(self.toggle_active)
+        self.checked_states = {True: Qt.Checked, False: Qt.Unchecked}
+        initial_state = self.checked_states[
+            self.config["SETTINGS"].getboolean("Active")
+        ]
+        self.active_checkbox.setCheckState(initial_state)
+
+        interval_layout = QHBoxLayout()
+        interval_layout.setAlignment(Qt.AlignLeft)
+        interval_heading = QLabel("Change check interval")
+        interval_heading.setObjectName("heading")
+        interval_label = QLabel("Check for changes every:")
+        self.interval_select = QSpinBox()
+        self.interval_select.setFixedWidth(50)
+        self.interval_select.setMinimum(5)
+        self.interval_select.setMaximum(99999999)
+        self.interval_select.setValue(self.config["SETTINGS"].getint("CheckInterval"))
+        self.interval_select.valueChanged.connect(self.change_interval)
+        seconds_label = QLabel("seconds")
+        interval_layout.addWidget(interval_label)
+        interval_layout.addWidget(self.interval_select)
+        interval_layout.addWidget(seconds_label)
+
+        ignore_heading = QLabel("Tracking preferences")
+        ignore_heading.setObjectName("heading")
+        ignore_label = QLabel("Ignore these files, folders, and file extensions:")
+
+        ignore_container = QWidget()
+        self.ignore_list_layout = QVBoxLayout()
+        self.ignore_list_layout.addStretch()
+        self.ignore_list_layout.setAlignment(Qt.AlignTop)
+        ignore_container.setLayout(self.ignore_list_layout)
+        self.ignore_list_contents = []
+
+        scroll_area = QScrollArea()
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(ignore_container)
+        scroll_area.setVerticalScrollBar(QScrollBar())
+
+        ignore_add_layout = QHBoxLayout()
+        ignore_add_layout.setAlignment(Qt.AlignLeft)
+        self.ignore_entry = QLineEdit()
+        self.ignore_entry.setObjectName("small")
+        ignore_button = QPushButton("Add")
+        ignore_button.clicked.connect(self.add_ignore)
+        ignore_add_layout.addWidget(self.ignore_entry)
+        ignore_add_layout.addWidget(ignore_button)
+
+        separators = self.generate_separators(1)
+
+        settings_layout.addWidget(folder_heading)
+        settings_layout.addLayout(general_layout)
+        settings_layout.addWidget(self.active_checkbox)
+        settings_layout.addLayout(interval_layout)
+        settings_layout.addWidget(separators[0])
+        settings_layout.addWidget(ignore_heading)
+        settings_layout.addWidget(ignore_label)
+        settings_layout.addWidget(scroll_area)
+        settings_layout.addLayout(ignore_add_layout)
+
+        self.setLayout(settings_layout)
+
+    def toggle_active(self):
+        state = self.active_checkbox.isChecked()
+        self.config["SETTINGS"]["Active"] = str(state)
+        with open(self.config_name, "w") as f:
+            self.config.write(f)
+
+    def change_interval(self):
+        interval = self.interval_select.value()
+        self.config["SETTINGS"]["CheckInterval"] = str(interval)
+        with open(self.config_name, "w") as f:
+            self.config.write(f)
+
+    def add_ignore(self):
+        text = self.ignore_entry.text().strip()
+        if not text:
+            return
+        row = QHBoxLayout()
+        text_label = QLabel(text)
+        remove_button = QPushButton("Remove")
+        remove_button.clicked.connect(
+            partial(self.remove_ignore, row)
+        )
+        row.addWidget(text_label)
+        row.addWidget(remove_button)
+        self.ignore_list_contents.append(row)
+        self.ignore_list_layout.insertLayout(self.ignore_list_layout.count() - 1, row)
+        self.ignore_entry.setText("")
+
+    def remove_ignore(self, row):
+        """
+        Remove given ignore row from list. 
+
+        Arguments:
+            row_num (QHBoxLayout): row object to be removed
+        """
+        self.remove_layout_contents(row)
+        self.ignore_list_contents.remove(row)
+        row.deleteLater()
+        del(row)
 
 def launch():
     app = QApplication(sys.argv)
-    app.setStyleSheet(
-    """
-    QTabBar::tab:selected {
-        background: white;
-        color: rgb(15, 15, 15);
-    }
-    QTabBar::tab {
-        background: rgb(179, 179, 179);
-        color: white;
-    }
-    QPushButton {
-        background-color: rgb(72, 133, 237);
-        border-style: solid;
-        border-style: none;
-        border-width: 2px;
-        border-radius: 2px;
-        border-color: rgb(72, 133, 237);
-        padding: 5.5px;
-        min-width: 4em;
-        font-family: Roboto Light;
-        color: white;
-    }
-    QPushButton:disabled {
-        background-color: rgb(145, 145, 145);
-    }
-    QPushButton:pressed {
-        background-color: rgb(46, 88, 160)
-    }
-    QTabWidget>QWidget>QWidget {
-        background: white;
-        color: rgb(15, 15, 15);
-    }
-    QScrollArea>QWidget>QWidget>QPushButton {
-        background-color: rgb(245, 245, 245);
-        color: rgb(72, 133, 237);
-    }
-    QScrollArea>QWidget>QWidget>QPushButton:pressed {
-        background-color: rgb(225, 225, 225);
-        color: rgb(72, 133, 237);
-    }
-    QScrollArea>QWidget>QWidget {
-        background-color: rgb(245, 245, 245);
-    }
-    QLabel {
-        /*font-family: Droid Sans Mono;*/
-        font-size: 12px;
-        color: rgb(15, 15, 15);
-    }
-    QScrollBar:vertical {              
-        border: 1px solid #999999;
-        background: white;
-        width: 10px;    
-        margin: 0px 0px 0px 0px;
-    }
-    QScrollBar::handle:vertical {
-        background-color: rgb(200, 200, 200);
-        border-radius: 2px;
-        min-height: 5px;
-    }
-    QScrollBar::add-line:vertical {
-        height: 0px;
-        subcontrol-position: bottom;
-        subcontrol-origin: margin;
-    }
-    QScrollBar::sub-line:vertical {
-        height: 0 px;
-        subcontrol-position: top;
-        subcontrol-origin: margin;
-    }
-    """
-    )
-
-    gui = VersionWindow("C:\\Users\\Liam\\Google Drive\\Projects\\Small\\test-repo")
+    with open("style.qss", "r") as f:
+        app.setStyleSheet(f.read())
+    gui = VersionWindow()
     sys.exit(app.exec_())
 
 

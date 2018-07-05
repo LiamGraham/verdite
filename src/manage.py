@@ -22,12 +22,13 @@ class FileManager:
     version control.
     """
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, temp_path):
         """
         Creates new FileManager for directory at given path. 
 
         Arguments:
             dir_path (str): path of target directory
+            temp_path (str): path of temp directory
         """
         self.repo = sh.git.bake(_cwd=dir_path)
         try:
@@ -36,9 +37,7 @@ class FileManager:
             raise InvalidDirectoryError("Target directory is not a repository")
 
         self.dir_path = dir_path
-        self.temp_path = (
-            "C:\\Users\\Liam\\Google Drive\\Projects\\Medium\\verdite\\temp"
-        )
+        self.temp_path = temp_path
 
     def store_changes(self):
         """

@@ -47,10 +47,53 @@ class VersionWindow(QTabWidget):
         except manage.InvalidDirectoryError as e:
             self.show_error_dialog(e.message)
             # TODO: Prompt to change to valid directory
+        self.init_window()
+
+    def init_window(self):
+        """
+        Initialises the appearance of the window, including the file versions and
+        settings tabs.
+        """
+        self.versions_tab = VersionsTab(self, self.manager)
+        self.settings_tab = SettingsTab(self, self.manager)
+        self.addTab(self.versions_tab, "Versions")
+        self.addTab(self.settings_tab, "Settings")
+
+        self.setFixedSize(500, 500)
+        self.setWindowTitle("View and Restore File Versions")
+        self.setWindowIcon(QIcon('images\\icon_64px.png'))
+        self.centre_window()
+        self.show()
+
+    def centre_window(self):
+        """
+        Changes the position of the window so that it is in the centre of the display
+        """
+        q_rect = self.frameGeometry()
+        centre_point = QDesktopWidget().availableGeometry().center()
+        q_rect.moveCenter(centre_point)
+        self.move(q_rect.topLeft())
+
+
+class VersionsTab(QWidget):
+    """
+    Tab containing version viewing and restoration interface.
+    """
+    def __init__(self, parent, manager):
+        """
+        Creates a new QWidget instance having the given parent and utilising the given
+        manager.
+        
+        Arguments:
+            parent (QWidget): parent of this widget
+            manager (manage.FileManager): file management interface
+        """
+        super(QWidget, self).__init__(parent)
+        self.manager = manager
         self.current_file = ""
         self.version_rows = []
         self.version_data = []
-        self.init_window()
+        self.init_layout()
 
     def update_version_list(self, refresh=False):
         """
@@ -71,16 +114,16 @@ class VersionWindow(QTabWidget):
 
         file_name = self.get_truncated_file_name()
         if refresh:
-            self.status_label.setText(f"Refreshed '{file_name}'")
+            self.set_status(f"Refreshed '{file_name}'")
         else:
-            self.status_label.setText(f"Loaded '{file_name}'")
+            self.set_status(f"Loaded '{file_name}'")
 
     def view_version(self, version_num):
         print(f"View version {version_num}")
         try:
             self.manager.open_file_version(self.current_file, version_num)
             file_name = self.get_truncated_file_name()
-            self.status_label.setText(
+            self.set_status(
                 f"Opened version {version_num} of '{file_name}'"
             )
         except manage.VersionError as e:
@@ -97,7 +140,7 @@ class VersionWindow(QTabWidget):
             self.manager.restore_file_version(self.current_file, version_num)
             self.update_version_list(refresh=True)
             file_name = self.get_truncated_file_name()
-            self.status_label.setText(
+            self.set_status(
                 f"Restored version {version_num} of '{file_name}' (now version {len(self.version_data)})"
             )
         except manage.VersionError as e:
@@ -111,7 +154,7 @@ class VersionWindow(QTabWidget):
         """
         Shows error dialog displaying the given message.
         """
-        self.status_label.setText("")
+        self.set_status("")
         error_dialog = QMessageBox()
         error_dialog.setText(message)
         error_dialog.setWindowTitle("Error")
@@ -132,6 +175,9 @@ class VersionWindow(QTabWidget):
         confirm_dialog.setIcon(QMessageBox.Question)
         choice = confirm_dialog.exec_()
         return choice == QMessageBox.Ok
+
+    def set_status(self, message):
+        self.status_label.setText(message)
 
     def add_version_rows(self):
         # Maximum length of version number, used for padding
@@ -208,25 +254,7 @@ class VersionWindow(QTabWidget):
         self.select_file()
         self.update_version_list(False)
 
-    def init_window(self):
-        """
-        Initialises the appearance of the window, including the file versions and
-        settings tabs.
-        """
-        self.versions_tab = QWidget()
-        self.settings_tab = QWidget()
-        self.versions_layout()
-        self.settings_layout()
-        self.addTab(self.versions_tab, "Versions")
-        self.addTab(self.settings_tab, "Settings")
-
-        self.setFixedSize(500, 500)
-        self.setWindowTitle("View and Restore File Versions")
-        self.setWindowIcon(QIcon('images\\icon_64px.png'))
-        self.centre_window()
-        self.show()
-
-    def versions_layout(self):
+    def init_layout(self):
         """
         Sets the contents and layout of the file versions tab.
         """
@@ -271,22 +299,28 @@ class VersionWindow(QTabWidget):
         bottom_row.addWidget(self.status_label)
         grid.addLayout(bottom_row, 2, 0, 1, 3)
 
-        self.versions_tab.setLayout(grid)
+        self.setLayout(grid)
 
-    def settings_layout(self):
+
+class SettingsTab(QWidget):
+    """
+    Tab containing settings interface.
+    """
+    def __init__(self, parent, manager):
         """
-        Sets the contents and layout of the settings tab. 
+        Creates a new QWidget instance having the given parent and utilising the given
+        manager.
+        
+        Arguments:
+            parent (QWidget): parent of this widget
+            manager (manage.FileManager): file management interface
         """
+        super(QWidget, self).__init__(parent)
+        self.manager = manager
+        self.init_layout()
+
+    def init_layout(self):
         pass
-
-    def centre_window(self):
-        """
-        Changes the position of the window so that it is in the centre of the display
-        """
-        q_rect = self.frameGeometry()
-        centre_point = QDesktopWidget().availableGeometry().center()
-        q_rect.moveCenter(centre_point)
-        self.move(q_rect.topLeft())
 
 
 def launch():

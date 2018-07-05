@@ -14,6 +14,8 @@ versions of files and restore them, if desired.
 
 ![Screenshot 1](https://github.com/LiamGraham/verdite/blob/master/images/screenshot_1.png)
 
+![Screenshot 2](https://github.com/LiamGraham/verdite/blob/master/images/screenshot_2.png)
+
 ## Built With
 * [git](https://git-scm.com/) - Underlying version control system
 * [sh](https://amoffat.github.io/sh/) - Python subprocess interface used to execute git

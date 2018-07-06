@@ -496,7 +496,11 @@ class SettingsTab(AbstractTab):
                 persistent list
         """
         if new:
-            self.manager.add_ignored(keyword)
+            try:
+                self.manager.add_ignored(keyword)
+            except manage.IgnoreError as e:
+                self.show_error_dialog(e.message)
+                return
 
         row_index = self.ignore_list_layout.count() - 1
 
@@ -534,8 +538,12 @@ class SettingsTab(AbstractTab):
             keyword (str): keyword of row to be removed
         """
         index = self.ignore_keywords.index(keyword)
+        try:
+            self.manager.remove_ignored(keyword)
+        except manage.IgnoreError as e:
+            self.show_error_dialog(e.message)
+            return
         row = self.ignore_rows[index]
-        self.manager.remove_ignored(keyword)
         self.remove_layout_contents(row)
         self.ignore_rows.pop(index)
         self.ignore_keywords.pop(index)

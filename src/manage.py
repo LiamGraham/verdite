@@ -37,6 +37,7 @@ class FileManager:
             raise InvalidDirectoryError("Target directory is not a repository")
 
         self.dir_path = dir_path
+        self.ignore_path = f"{dir_path}\\.gitignore"
         self.temp_path = temp_path
 
     def store_changes(self):
@@ -213,6 +214,69 @@ class FileManager:
             if change.file_path == file_path:
                 return change.codes
         return None
+
+    def get_all_ignored(self):
+        """
+        Returns all ignore keywords for target directory.
+
+        Returns (list(str)): ignored keywords for target directory
+        """
+        try:
+            return self._collect_all_ignored()
+        except FileNotFoundError:
+            self._create_ignore_file()
+            return []
+
+    def add_ignored(self, keyword):
+        """
+        Add the given ignore keyword to the set of keywords for the taret directory.
+
+        Arguments:
+            keyword (str): ignore keyword to add
+        """
+        try:
+            ignored = self._collect_all_ignored()
+        except FileNotFoundError:
+            self._create_ignore_file()
+        with open(self.ignore_path, "a") as f:
+            f.write(keyword + "\n")
+            self.store_changes()
+
+    def remove_ignored(self, keyword):
+        """
+        Remove the given ignore keyword from the set of keywords for the taret directory.
+
+        Arguments:
+            keyword (str): ignore keyword to remove 
+        """
+        ignored = self._collect_all_ignored()
+        with open(self.ignore_path, "w") as f:
+            ignored.remove(keyword)
+            f.writelines(ignored)
+            self.store_changes()
+    
+    def _create_ignore_file(self):
+        """
+        Create .gitignore file at the top of the target directory. 
+        """
+        with open(self.ignore_path, "w"):
+            pass
+        self.store_changes()
+
+    def _collect_all_ignored(self):
+        """
+        Returns a list of ignore keywords, eliminating any blank lines.
+
+        Returns (list(str)): all ignore keywords in ignore file
+        """
+        with open(self.ignore_path, "r") as f:
+            contents = f.read().split("\n")
+        ignored = []
+        for line in contents:
+            line = line.strip()
+            if line:
+                ignored.append(line)
+        return ignored
 
     def _get_commit_timestamp(self, commit_hash):
         """

@@ -224,7 +224,6 @@ class FileManager:
         try:
             return self._collect_all_ignored()
         except FileNotFoundError:
-            self._create_ignore_file()
             return []
 
     def add_ignored(self, keyword):
@@ -240,7 +239,10 @@ class FileManager:
             self._create_ignore_file()
         with open(self.ignore_path, "a") as f:
             f.write(keyword + "\n")
-            self.store_changes()
+            try:
+                self.store_changes()
+            except pbs.ErrorReturnCode:
+                raise IgnoreError("Unable to add ignore keyword")
 
     def remove_ignored(self, keyword):
         """
@@ -252,8 +254,11 @@ class FileManager:
         ignored = self._collect_all_ignored()
         with open(self.ignore_path, "w") as f:
             ignored.remove(keyword)
-            f.writelines(ignored)
-            self.store_changes()
+            f.write("\n".join(ignored))
+            try:
+                self.store_changes()
+            except pbs.ErrorReturnCode:
+                raise IgnoreError("Unable to remove ignore keyword")
     
     def _create_ignore_file(self):
         """
@@ -261,7 +266,6 @@ class FileManager:
         """
         with open(self.ignore_path, "w"):
             pass
-        self.store_changes()
 
     def _collect_all_ignored(self):
         """
@@ -330,6 +334,17 @@ class VersionError(Exception):
     """
     Exception raised for all error cases relating to viewing and restoration of previous
     file versions.
+    """
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.message = message
+
+
+class IgnoreError(Exception):
+    """
+    Exception raised for all error cases relating to adding and removal of ignore
+    keywords.
     """
 
     def __init__(self, message):

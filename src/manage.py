@@ -254,7 +254,8 @@ class FileManager:
         ignored = self._collect_all_ignored()
         with open(self.ignore_path, "w") as f:
             ignored.remove(keyword)
-            f.write("\n".join(ignored))
+            for x in ignored:
+                f.write(x + "\n")
             try:
                 self.store_changes()
             except pbs.ErrorReturnCode:

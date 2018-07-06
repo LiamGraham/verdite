@@ -61,10 +61,11 @@ class VersionWindow(QTabWidget):
         Initialises the appearance of the window, including the file versions and
         settings tabs.
         """
+        self.tab_names = ["Versions", "Settings"]
         self.versions_tab = VersionsTab(self, self.manager)
         self.settings_tab = SettingsTab(self, self.manager)
-        self.addTab(self.versions_tab, "Versions")
-        self.addTab(self.settings_tab, "Settings")
+        self.addTab(self.versions_tab, self.tab_names[0])
+        self.addTab(self.settings_tab, self.tab_names[1])
 
         self.setFixedSize(500, 500)
         self.setWindowTitle("View and Restore File Versions")
@@ -81,6 +82,16 @@ class VersionWindow(QTabWidget):
         q_rect.moveCenter(centre_point)
         self.move(q_rect.topLeft())
 
+    def set_current_tab(self, tab_name):
+        """
+        Set the current tab to the tab having the given name.
+
+        Arguments:
+            tab_name (str): name of tab to change to
+        """
+        if tab_name not in self.tab_names:
+            return
+        self.setCurrentIndex(self.tab_names.index(tab_name))
 
 class AbstractTab(QWidget):
     """
@@ -357,6 +368,7 @@ class SettingsTab(AbstractTab):
         super().__init__(parent, manager)
         self.config = configparser.ConfigParser()
         self.config_name = "config.ini"
+        self.ignore_keywords = []
         self.init_layout()
 
     def init_layout(self):
@@ -400,14 +412,13 @@ class SettingsTab(AbstractTab):
 
         ignore_heading = QLabel("Tracking preferences")
         ignore_heading.setObjectName("heading")
-        ignore_label = QLabel("Ignore these files, folders, and file extensions:")
+        ignore_label = QLabel("Ignore files with these extensions:")
 
         ignore_container = QWidget()
         self.ignore_list_layout = QVBoxLayout()
         self.ignore_list_layout.addStretch()
         self.ignore_list_layout.setAlignment(Qt.AlignTop)
         ignore_container.setLayout(self.ignore_list_layout)
-        self.ignore_list_contents = []
 
         scroll_area = QScrollArea()
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -421,9 +432,12 @@ class SettingsTab(AbstractTab):
         self.ignore_entry = QLineEdit()
         self.ignore_entry.setObjectName("small")
         ignore_button = QPushButton("Add")
-        ignore_button.clicked.connect(self.add_ignore)
+        ignore_button.clicked.connect(self.new_ignored)
         ignore_add_layout.addWidget(self.ignore_entry)
         ignore_add_layout.addWidget(ignore_button)
+        self.ignore_rows = []
+
+        self.add_all_ignored()
 
         separators = self.generate_separators(1)
 
@@ -440,44 +454,119 @@ class SettingsTab(AbstractTab):
         self.setLayout(settings_layout)
 
     def toggle_active(self):
+        """
+        Toggle if the files in the tracked directory are currently being tracked.
+        """
         state = self.active_checkbox.isChecked()
         self.config["SETTINGS"]["Active"] = str(state)
         with open(self.config_name, "w") as f:
             self.config.write(f)
 
     def change_interval(self):
+        """
+        Change check interval to user-defined value.
+        """
         interval = self.interval_select.value()
         self.config["SETTINGS"]["CheckInterval"] = str(interval)
         with open(self.config_name, "w") as f:
             self.config.write(f)
 
-    def add_ignore(self):
-        text = self.ignore_entry.text().strip()
-        if not text:
+    def add_all_ignored(self):
+        ignored = self.manager.get_all_ignored()
+        for x in ignored:
+            self.add_ignored_row(x)
+
+    def new_ignored(self):
+        """
+        Add new ignore keyword entered by user.
+        """
+        keyword = self.parse_ignore_text()
+        if not keyword or keyword in self.ignore_keywords:
             return
+        self.add_ignored_row(keyword, True)
+
+    def add_ignored_row(self, keyword, new=False):
+        """
+        Add an ignore row containing the given ignore keyword. The keyword will be added
+        to the persistent ignore list if it is new.
+
+        Arguments: 
+            keyword (str): ignore keyword
+            new (boolean): True if given ignore keyword is new and to be added to
+                persistent list
+        """
+        if new:
+            self.manager.add_ignored(keyword)
+
+        row_index = self.ignore_list_layout.count() - 1
+
         row = QHBoxLayout()
-        text_label = QLabel(text)
+        text_label = QLabel(keyword.replace("*", "", 1))
         remove_button = QPushButton("Remove")
         remove_button.clicked.connect(
-            partial(self.remove_ignore, row)
+            partial(self.remove_ignored_row, keyword)
         )
         row.addWidget(text_label)
         row.addWidget(remove_button)
-        self.ignore_list_contents.append(row)
-        self.ignore_list_layout.insertLayout(self.ignore_list_layout.count() - 1, row)
+
+        self.ignore_list_layout.insertLayout(row_index, row)
+        self.ignore_rows.append(row)
+        self.ignore_keywords.append(keyword)
         self.ignore_entry.setText("")
 
-    def remove_ignore(self, row):
+    def parse_ignore_text(self):
+        text = self.ignore_entry.text().strip()
+        if not text:
+            return ""
+        file_ext = ""
+        # Add initial '*.' and eliminate duplicate precending '.'s
+        for i in range(0, len(text)):
+            if text[i] != ".":
+                file_ext = "*." + text[i:]
+                break
+        return file_ext
+
+    def remove_ignored_row(self, keyword):
         """
-        Remove given ignore row from list. 
+        Remove ignore row having given keyword from list. 
 
         Arguments:
-            row_num (QHBoxLayout): row object to be removed
+            keyword (str): keyword of row to be removed
         """
+        index = self.ignore_keywords.index(keyword)
+        row = self.ignore_rows[index]
+        self.manager.remove_ignored(keyword)
         self.remove_layout_contents(row)
-        self.ignore_list_contents.remove(row)
+        self.ignore_rows.pop(index)
+        self.ignore_keywords.pop(index)
         row.deleteLater()
         del(row)
+
+class SystemTrayIcon(QSystemTrayIcon):
+
+    def __init__(self, parent):
+        self.parent = parent
+        icon = QIcon("images\\icon_500px_transparent.png")
+        super(QSystemTrayIcon, self).__init__(icon, parent)
+        self.init_context_menu()
+        self.show()
+
+    def init_context_menu(self):
+        menu = QMenu(self.parent)
+        versionsAction = menu.addAction("View versions")
+        versionsAction.triggered.connect(self.view_versions)
+        settingsAction = menu.addAction("Settings")
+        settingsAction.triggered.connect(self.settings)
+        self.setContextMenu(menu)
+
+    def view_versions(self):
+        self.parent.showNormal()
+        self.parent.set_current_tab("Versions")
+
+    def settings(self):
+        self.parent.showNormal()
+        self.parent.set_current_tab("Settings")
+
 
 def launch():
     app = QApplication(sys.argv)
@@ -489,4 +578,3 @@ def launch():
 
 if __name__ == "__main__":
     launch()
-

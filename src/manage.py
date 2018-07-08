@@ -14,7 +14,8 @@ import os
 import shutil
 import dataclasses
 import datetime
-
+from subprocess import call
+from platform import system
 
 class FileManager:
     """
@@ -274,7 +275,7 @@ class FileManager:
         Create .gitignore file at the top of the target directory. 
         """
         with open(self.ignore_path, "w"):
-            pass
+            self._hide_destination(self.ignore_path)
 
     def _collect_all_ignored(self):
         """
@@ -305,6 +306,19 @@ class FileManager:
             self.repo.show('--pretty=format:"%cd"', "--no-patch", commit_hash)
         ).replace('"', "")
         return datetime.datetime.strptime(date_str, "%a %b %d %H:%M:%S %Y %z")
+
+    def _hide_destination(self, path):
+        """
+        Hide the file or directory with the given path.
+
+        Arguments:
+            path (str): path of target file or directory
+        """
+        system = platform.system()
+        if system == "Windows":
+            subprocess.call(["attrib", "+H", path])
+        else if system == "Darwin":
+            call(["chflags", "hidden", path])
 
 
 @dataclasses.dataclass

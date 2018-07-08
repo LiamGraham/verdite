@@ -12,7 +12,6 @@ except ImportError:
 
 import os
 import shutil
-import dataclasses
 import datetime
 from dataclasses import dataclass
 from subprocess import call
@@ -36,11 +35,14 @@ class FileManager:
         try:
             self.repo("rev-parse", "--is-inside-work-tree")
         except pbs.ErrorReturnCode:
-            raise InvalidDirectoryError("Target directory is not a repository")
+            self.repo.init()
 
         self.dir_path = dir_path
         self.ignore_path = f"{dir_path}\\.gitignore"
         self.temp_path = temp_path
+
+    def initialise_directory(self):
+        self.repo.init()
 
     def store_changes(self):
         """
@@ -225,7 +227,7 @@ class FileManager:
         """
         if not self._ignore_file_exists():
             self._create_ignore_file()
-            return self._collect_all_ignored()
+        return self._collect_all_ignored()
 
     def add_ignored(self, keyword):
         """
@@ -255,7 +257,7 @@ class FileManager:
         """
         if not self._ignore_file_exists():
             self._create_ignore_file()
-            ignored = self._collect_all_ignored()
+        ignored = self._collect_all_ignored()
         with open(self.ignore_path, "w") as f:
             if ignored:
                 ignored.remove(keyword)
@@ -265,7 +267,7 @@ class FileManager:
                 self.store_changes()
             except pbs.ErrorReturnCode:
                 pass
-    
+
     def _ignore_file_exists(self):
         return os.path.isfile(self.ignore_path)
     

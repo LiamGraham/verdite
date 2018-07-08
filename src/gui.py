@@ -122,7 +122,6 @@ class AbstractTab(QWidget):
         """
         Shows error dialog displaying the given message.
         """
-        self.set_status("")
         error_dialog = QMessageBox()
         error_dialog.setText(message)
         error_dialog.setWindowTitle("Error")
@@ -210,6 +209,7 @@ class VersionsTab(AbstractTab):
             self.set_status(f"Opened version {version_num} of '{file_name}'")
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
+            self.set_status("")
 
     def restore_version(self, version_num):
         file_name = self.get_truncated_file_name()
@@ -227,6 +227,7 @@ class VersionsTab(AbstractTab):
             )
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
+            self.set_status("")
 
     def set_status(self, message):
         self.status_label.setText(message)
@@ -289,6 +290,7 @@ class VersionsTab(AbstractTab):
             return data
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
+            self.set_status("")
             return None
 
     def change_file(self):
@@ -437,7 +439,7 @@ class SettingsTab(AbstractTab):
         ignore_add_layout.addWidget(ignore_button)
         self.ignore_rows = []
 
-        self.add_all_ignored()
+        self.update_ignored_list()
 
         separators = self.generate_separators(1)
 
@@ -471,10 +473,19 @@ class SettingsTab(AbstractTab):
         with open(self.config_name, "w") as f:
             self.config.write(f)
 
-    def add_all_ignored(self):
+    def update_ignored_list(self):
+        self.clear_ignored_list()
         ignored = self.manager.get_all_ignored()
         for x in ignored:
             self.add_ignored_row(x)
+
+    def clear_ignored_list(self):
+        for x in self.ignore_rows:
+            self.remove_layout_contents(x)
+            self.ignore_list_layout.removeItem(x)
+            x.deleteLater()
+            del (x)
+        self.ignore_rows.clear()
 
     def new_ignored(self):
         """
@@ -483,9 +494,15 @@ class SettingsTab(AbstractTab):
         keyword = self.parse_ignore_text()
         if not keyword or keyword in self.ignore_keywords:
             return
-        self.add_ignored_row(keyword, True)
+        try:
+            self.manager.add_ignored(keyword)
+        except manage.IgnoreError as e:
+            self.show_error_dialog(e.message)
+            return
+        self.update_ignored_list()
+        self.ignore_entry.setText("")
 
-    def add_ignored_row(self, keyword, new=False):
+    def add_ignored_row(self, keyword):
         """
         Add an ignore row containing the given ignore keyword. The keyword will be added
         to the persistent ignore list if it is new.
@@ -495,13 +512,6 @@ class SettingsTab(AbstractTab):
             new (boolean): True if given ignore keyword is new and to be added to
                 persistent list
         """
-        if new:
-            try:
-                self.manager.add_ignored(keyword)
-            except manage.IgnoreError as e:
-                self.show_error_dialog(e.message)
-                return
-
         row_index = self.ignore_list_layout.count() - 1
 
         row = QHBoxLayout()
@@ -515,8 +525,6 @@ class SettingsTab(AbstractTab):
 
         self.ignore_list_layout.insertLayout(row_index, row)
         self.ignore_rows.append(row)
-        self.ignore_keywords.append(keyword)
-        self.ignore_entry.setText("")
 
     def parse_ignore_text(self):
         text = self.ignore_entry.text().strip()
@@ -537,18 +545,20 @@ class SettingsTab(AbstractTab):
         Arguments:
             keyword (str): keyword of row to be removed
         """
-        index = self.ignore_keywords.index(keyword)
         try:
             self.manager.remove_ignored(keyword)
         except manage.IgnoreError as e:
             self.show_error_dialog(e.message)
-            return
-        row = self.ignore_rows[index]
-        self.remove_layout_contents(row)
-        self.ignore_rows.pop(index)
-        self.ignore_keywords.pop(index)
-        row.deleteLater()
-        del(row)
+            return  
+        except FileNotFoundError as e:
+            self.ignore_keywords.clear()
+            for row in self.ignore_rows:
+                self.remove_layout_contents(row)
+                row.deleteLater()
+                del(row)
+            self.show_error_dialog("Ignore file has been deleted")
+            return  
+        self.update_ignored_list()
 
 class SystemTrayIcon(QSystemTrayIcon):
 

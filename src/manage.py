@@ -14,6 +14,7 @@ import os
 import shutil
 import dataclasses
 import datetime
+from dataclasses import dataclass
 from subprocess import call
 from platform import system
 
@@ -115,9 +116,9 @@ class FileManager:
         if not os.path.realpath(file_path).startswith(self.dir_path):
             raise VersionError("File is not inside controlled directory")
         try:
-            file_log = self.repo.log("--follow", "--oneline", file_path).split("\n")
+            file_log = self.repo.log("--oneline", file_path).split("\n")
         except pbs.ErrorReturnCode:
-            raise VersionError("Could not retrieve file")
+            raise VersionError("Unable to retrieve file")
         versions = []
         for commit in file_log:
             if not commit:
@@ -222,10 +223,9 @@ class FileManager:
 
         Returns (list(str)): ignored keywords for target directory
         """
-        try:
+        if not self._ignore_file_exists():
+            self._create_ignore_file()
             return self._collect_all_ignored()
-        except FileNotFoundError:
-            return []
 
     def add_ignored(self, keyword):
         """
@@ -234,11 +234,9 @@ class FileManager:
         Arguments:
             keyword (str): ignore keyword to add
         """
-        try:
-            ignored = self._collect_all_ignored()
-        except FileNotFoundError:
+        if not self._ignore_file_exists():
             self._create_ignore_file()
-            ignored = []
+        ignored = self._collect_all_ignored()
         if keyword in ignored:
             return
         with open(self.ignore_path, "a") as f:
@@ -255,11 +253,9 @@ class FileManager:
         Arguments:
             keyword (str): ignore keyword to remove 
         """
-        try:
-            ignored = self._collect_all_ignored()
-        except FileNotFoundError:
+        if not self._ignore_file_exists():
             self._create_ignore_file()
-            ignored = []
+            ignored = self._collect_all_ignored()
         with open(self.ignore_path, "w") as f:
             if ignored:
                 ignored.remove(keyword)
@@ -269,6 +265,9 @@ class FileManager:
                 self.store_changes()
             except pbs.ErrorReturnCode:
                 pass
+    
+    def _ignore_file_exists(self):
+        return os.path.isfile(self.ignore_path)
     
     def _create_ignore_file(self):
         """
@@ -314,14 +313,14 @@ class FileManager:
         Arguments:
             path (str): path of target file or directory
         """
-        system = platform.system()
-        if system == "Windows":
-            subprocess.call(["attrib", "+H", path])
-        else if system == "Darwin":
+        operating_system = system()
+        if operating_system == "Windows":
+            call(["attrib", "+H", path])
+        elif operating_system == "Darwin":
             call(["chflags", "hidden", path])
 
 
-@dataclasses.dataclass
+@dataclass
 class VersionData:
     """
     Basic data class storing commit information for a specific file version.
@@ -333,7 +332,7 @@ class VersionData:
     timestamp: datetime.datetime
 
 
-@dataclasses.dataclass
+@dataclass
 class ChangeData:
     """
     Basic data class storing change information for a specific file.

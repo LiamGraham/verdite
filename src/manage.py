@@ -237,12 +237,15 @@ class FileManager:
             ignored = self._collect_all_ignored()
         except FileNotFoundError:
             self._create_ignore_file()
+            ignored = []
+        if keyword in ignored:
+            return
         with open(self.ignore_path, "a") as f:
             f.write(keyword + "\n")
             try:
                 self.store_changes()
             except pbs.ErrorReturnCode:
-                raise IgnoreError("Unable to add ignore keyword")
+                pass
 
     def remove_ignored(self, keyword):
         """
@@ -251,15 +254,20 @@ class FileManager:
         Arguments:
             keyword (str): ignore keyword to remove 
         """
-        ignored = self._collect_all_ignored()
+        try:
+            ignored = self._collect_all_ignored()
+        except FileNotFoundError:
+            self._create_ignore_file()
+            ignored = []
         with open(self.ignore_path, "w") as f:
-            ignored.remove(keyword)
+            if ignored:
+                ignored.remove(keyword)
             for x in ignored:
                 f.write(x + "\n")
             try:
                 self.store_changes()
             except pbs.ErrorReturnCode:
-                raise IgnoreError("Unable to remove ignore keyword")
+                pass
     
     def _create_ignore_file(self):
         """

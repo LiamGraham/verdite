@@ -127,8 +127,12 @@ class FileManager:
                 continue
             log_entry = commit.split()  # Log entry has form "<hash> <message>"
             timestamp = self._get_commit_timestamp(log_entry[0])
+            message = " ".join(log_entry[1:])
+            if "delete" in message.lower():
+                # Omit delete commits from version list
+                continue
             versions.append(
-                VersionData(log_entry[0], " ".join(log_entry[1:]), timestamp)
+                VersionData(log_entry[0], message, timestamp)
             )
         return versions
 

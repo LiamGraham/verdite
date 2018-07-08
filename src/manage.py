@@ -245,12 +245,15 @@ class FileManager:
         ignored = self._collect_all_ignored()
         if keyword in ignored:
             return
+        # Necessary to unhide hidden file to write to it
+        self._unhide_destination(self.ignore_path)
         with open(self.ignore_path, "a") as f:
             f.write(keyword + "\n")
             try:
                 self.store_changes()
             except pbs.ErrorReturnCode:
                 pass
+            self._hide_destination(self.ignore_path)            
 
     def remove_ignored(self, keyword):
         """
@@ -262,6 +265,8 @@ class FileManager:
         if not self._ignore_file_exists():
             self._create_ignore_file()
         ignored = self._collect_all_ignored()
+        # Necessary to unhide hidden file to write to it
+        self._unhide_destination(self.ignore_path)
         with open(self.ignore_path, "w") as f:
             if ignored:
                 ignored.remove(keyword)
@@ -271,6 +276,7 @@ class FileManager:
                 self.store_changes()
             except pbs.ErrorReturnCode:
                 pass
+            self._hide_destination(self.ignore_path)
 
     def _ignore_file_exists(self):
         return os.path.isfile(self.ignore_path)
@@ -325,6 +331,18 @@ class FileManager:
         elif operating_system == "Darwin":
             call(["chflags", "hidden", path])
 
+    def _unhide_destination(self, path):
+        """
+        Unhide the file or directory with the given path.
+
+        Arguments:
+            path (str): path of target file or directory
+        """
+        operating_system = system()
+        if operating_system == "Windows":
+            call(["attrib", "-H", path])
+        elif operating_system == "Darwin":
+            call(["chflags", "nohidden", path])
 
 @dataclass
 class VersionData:

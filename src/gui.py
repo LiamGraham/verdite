@@ -549,15 +549,7 @@ class SettingsTab(AbstractTab):
             self.manager.remove_ignored(keyword)
         except manage.IgnoreError as e:
             self.show_error_dialog(e.message)
-            return  
-        except FileNotFoundError as e:
-            self.ignore_keywords.clear()
-            for row in self.ignore_rows:
-                self.remove_layout_contents(row)
-                row.deleteLater()
-                del(row)
-            self.show_error_dialog("Ignore file has been deleted")
-            return  
+            return
         self.update_ignored_list()
 
 class SystemTrayIcon(QSystemTrayIcon):

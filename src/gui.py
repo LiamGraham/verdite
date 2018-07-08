@@ -492,7 +492,7 @@ class SettingsTab(AbstractTab):
         Add new ignore keyword entered by user.
         """
         keyword = self.parse_ignore_text()
-        if not keyword or keyword in self.ignore_keywords:
+        if not keyword or keyword in self.manager.get_all_ignored():
             return
         try:
             self.manager.add_ignored(keyword)

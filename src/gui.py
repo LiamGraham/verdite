@@ -48,12 +48,8 @@ class VersionWindow(QTabWidget):
         config.read("config.ini")
         dir_path = config["DIRECTORIES"]["Main"]
         temp_path = config["DIRECTORIES"]["Temp"]
-        try:
-            self.manager = manage.FileManager(dir_path, temp_path)
-        except manage.InvalidDirectoryError as e:
-            self.show_error_dialog(e.message)
-            # TODO: Prompt to change to valid directory
-
+        self.manager = manage.FileManager(dir_path, temp_path)
+        
         self.init_window()
 
     def init_window(self):
@@ -197,19 +193,18 @@ class VersionsTab(AbstractTab):
 
         file_name = self.get_truncated_file_name()
         if refresh:
-            self.set_status(f"Refreshed '{file_name}'")
+            self.status_label.setText(f"Refreshed '{file_name}'")
         else:
-            self.set_status(f"Loaded '{file_name}'")
+            self.status_label.setText(f"Loaded '{file_name}'")
 
     def view_version(self, version_num):
-        print(f"View version {version_num}")
         try:
             self.manager.open_file_version(self.current_file, version_num)
             file_name = self.get_truncated_file_name()
-            self.set_status(f"Opened version {version_num} of '{file_name}'")
+            self.status_label.setText(f"Opened version {version_num} of '{file_name}'")
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
-            self.set_status("")
+            self.status_label.setText("")
 
     def restore_version(self, version_num):
         file_name = self.get_truncated_file_name()
@@ -222,12 +217,12 @@ class VersionsTab(AbstractTab):
             self.manager.restore_file_version(self.current_file, version_num)
             self.update_version_list(refresh=True)
             file_name = self.get_truncated_file_name()
-            self.set_status(
+            self.status_label.setText(
                 f"Restored version {version_num} of '{file_name}' (now version {len(self.version_data)})"
             )
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
-            self.set_status("")
+            self.status_label.setText("")
 
     def set_status(self, message):
         self.status_label.setText(message)
@@ -237,6 +232,7 @@ class VersionsTab(AbstractTab):
         max_ver_length = len(str(len(self.version_data)))
         for i, x in enumerate(self.version_data):
             version_num = len(self.version_data) - i
+            print(f"Version {version_num}: {x}")
             version_str = str(version_num).ljust(max_ver_length)
             row = QHBoxLayout()
             label = QLabel(
@@ -290,7 +286,7 @@ class VersionsTab(AbstractTab):
             return data
         except manage.VersionError as e:
             self.show_error_dialog(e.message)
-            self.set_status("")
+            self.status_label.setText("")
             return None
 
     def change_file(self):
@@ -299,6 +295,12 @@ class VersionsTab(AbstractTab):
         """
         self.select_file()
         self.update_version_list(False)
+
+    def add_no_files_row(self):
+        no_files_row = QHBoxLayout()
+        no_files_row.addWidget(QLabel("No file selected"))
+        self.version_rows.append(no_files_row)
+        self.version_layout.insertLayout(0, self.version_rows[0])
 
     def init_layout(self):
         """
@@ -323,10 +325,7 @@ class VersionsTab(AbstractTab):
         self.version_layout = QVBoxLayout()
         self.version_layout.addStretch()
         self.version_layout.setAlignment(Qt.AlignTop)
-        no_files_row = QHBoxLayout()
-        no_files_row.addWidget(QLabel("No file selected"))
-        self.version_rows.append(no_files_row)
-        self.version_layout.insertLayout(0, self.version_rows[0])
+        self.add_no_files_row()
         version_container.setLayout(self.version_layout)
 
         scroll_area = QScrollArea()
@@ -454,6 +453,11 @@ class SettingsTab(AbstractTab):
         settings_layout.addLayout(ignore_add_layout)
 
         self.setLayout(settings_layout)
+
+    def keyPressEvent(self, e):
+        if self.focusWidget() is self.ignore_entry and e.key() == Qt.Key_Return:
+            # 'Enter' key is pressed to add new ignore keyword
+            self.new_ignored()
 
     def toggle_active(self):
         """

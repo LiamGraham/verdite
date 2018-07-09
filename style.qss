@@ -33,7 +33,7 @@ QTabBar::tab:!selected {
 }
 
 QTabBar::tab:top:!selected {
-    margin-top: 3px;
+    margin-top: 2px;
 }
 
 QTabBar::tab:bottom:!selected {

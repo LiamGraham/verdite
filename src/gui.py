@@ -57,11 +57,13 @@ class VersionWindow(QTabWidget):
         Initialises the appearance of the window, including the file versions and
         settings tabs.
         """
-        self.tab_names = ["Versions", "Settings"]
+        self.tab_names = ["Versions", "Settings", "About"]
         self.versions_tab = VersionsTab(self, self.manager)
         self.settings_tab = SettingsTab(self, self.manager)
+        self.about_tab = AboutTab(self)
         self.addTab(self.versions_tab, self.tab_names[0])
         self.addTab(self.settings_tab, self.tab_names[1])
+        self.addTab(self.about_tab, self.tab_names[2])
 
         self.setFixedSize(500, 500)
         self.setWindowTitle("View and Restore File Versions")
@@ -555,6 +557,34 @@ class SettingsTab(AbstractTab):
             self.show_error_dialog(e.message)
             return
         self.update_ignored_list()
+
+
+class AboutTab(AbstractTab):
+    """
+    Tab containing version viewing and restoration interface.
+    """
+
+    def __init__(self, parent):
+        """
+        Creates a new tab widget instance having the given parent and utilising the given
+        manager.
+        
+        Arguments:
+            parent (QWidget): parent of this widget
+            manager (manage.FileManager): file management interface
+        """
+        super().__init__(parent, None)
+    
+    def init_layout(self):
+        about_layout = QVBoxLayout()
+        about_layout.setAlignment(Qt.AlignTop)
+
+        license_label = QLabel("License")
+        license_label.setObjectName("heading")
+
+        about_layout.addWidget(license_label)
+        self.setLayout(about_layout)
+
 
 class SystemTrayIcon(QSystemTrayIcon):
 

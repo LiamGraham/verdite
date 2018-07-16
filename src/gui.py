@@ -234,7 +234,6 @@ class VersionsTab(AbstractTab):
         max_ver_length = len(str(len(self.version_data)))
         for i, x in enumerate(self.version_data):
             version_num = len(self.version_data) - i
-            print(f"Version {version_num}: {x}")
             version_str = str(version_num).ljust(max_ver_length)
             row = QHBoxLayout()
             label = QLabel(

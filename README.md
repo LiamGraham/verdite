@@ -7,8 +7,8 @@ A git-powered automatic version control tool for everday use.
 ## Summary
 
 Verdite provides the advantages of a sophisticated version control system like git without you having to learn any commands or open a terminal. It automatically detects and stores changes made to files in the selected
-directory (not unlike products like Google Drive and Dropbox). You can then view prior
-versions of files and restore them via the user interface. 
+directory (not unlike products like Google Drive and Dropbox) and allows you to view and restore prior
+versions of files via the user interface.
 
 ## Screenshots
 

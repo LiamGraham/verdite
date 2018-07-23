@@ -79,7 +79,7 @@ class FileManager:
         Returns the changes made to files and the code corresponding to the change in
         the form of ChangeData objects.
 
-        Returns (ChangeData): changes made to files
+        Returns (list(ChangeData)): changes made to files
 
         Status codes:
         - M: modified

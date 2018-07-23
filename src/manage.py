@@ -147,7 +147,7 @@ class FileManager:
         """
         target_ver = self._get_target_version(file_path, version_num)
         try:
-            # TODO: Breaks if file had different name at given version
+            # FIXME: Breaks if file had different name at given version
             self.repo.checkout(target_ver.c_hash, file_path)
             shutil.copy(file_path, self.temp_path)
             os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")

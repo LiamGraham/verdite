@@ -1,7 +1,6 @@
 import manage
 import time
-import configparser
-
+import config
 
 def control_loop():
     """
@@ -11,12 +10,10 @@ def control_loop():
     Arguments:
         dir_path (str): path of target directory
     """
-    config = configparser.ConfigParser()
-    config_name = "config.ini"
-    config.read(config_name)
-    dir_path = config["DIRECTORIES"]["Main"]
-    temp_path = config["DIRECTORIES"]["Temp"]
-    interval = config["SETTINGS"].getint("CheckInterval")
+    configure = config.ConfigManager()
+    dir_path = configure.get_dir_path()
+    temp_path = configure.get_temp_path()
+    interval = configure.get_interval()
 
     try:
         manager = manage.FileManager(dir_path, temp_path)
@@ -25,9 +22,8 @@ def control_loop():
 
     while True:
         time.sleep(interval)
-        config.read(config_name)
-        interval = config["SETTINGS"].getint("CheckInterval")
-        active = config["SETTINGS"].getboolean("Active")
+        interval = configure.get_interval()
+        active = configure.get_active()
         if not active or not manager.has_changed():
             print(f"No changes (Active: {active})")
             continue

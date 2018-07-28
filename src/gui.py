@@ -5,8 +5,8 @@ from PyQt5.QtCore import *
 import os.path
 import textwrap
 from functools import partial
-import configparser
 
+import config
 import manage
 
 
@@ -44,10 +44,9 @@ class VersionWindow(QTabWidget):
         """
         super(VersionWindow, self).__init__()
 
-        config = configparser.ConfigParser()
-        config.read("config.ini")
-        dir_path = config["DIRECTORIES"]["Main"]
-        temp_path = config["DIRECTORIES"]["Temp"]
+        configure = config.ConfigManager()
+        dir_path = configure.get_dir_path()
+        temp_path = configure.get_temp_path()
         self.manager = manage.FileManager(dir_path, temp_path)
         
         self.init_window()
@@ -368,13 +367,11 @@ class SettingsTab(AbstractTab):
             manager (manage.FileManager): file management interface
         """
         super().__init__(parent, manager)
-        self.config = configparser.ConfigParser()
-        self.config_name = "config.ini"
+        self.configure = config.ConfigManager()
         self.ignore_keywords = []
         self.init_layout()
 
     def init_layout(self):
-        self.config.read(self.config_name)
         settings_layout = QVBoxLayout()
         settings_layout.setAlignment(Qt.AlignTop)
 
@@ -392,7 +389,7 @@ class SettingsTab(AbstractTab):
         self.active_checkbox.toggled.connect(self.toggle_active)
         self.checked_states = {True: Qt.Checked, False: Qt.Unchecked}
         initial_state = self.checked_states[
-            self.config["SETTINGS"].getboolean("Active")
+            self.configure.get_active()
         ]
         self.active_checkbox.setCheckState(initial_state)
 
@@ -405,7 +402,7 @@ class SettingsTab(AbstractTab):
         self.interval_select.setFixedWidth(50)
         self.interval_select.setMinimum(5)
         self.interval_select.setMaximum(99999999)
-        self.interval_select.setValue(self.config["SETTINGS"].getint("CheckInterval"))
+        self.interval_select.setValue(self.configure.get_interval())
         self.interval_select.valueChanged.connect(self.change_interval)
         seconds_label = QLabel("seconds")
         interval_layout.addWidget(interval_label)
@@ -465,18 +462,14 @@ class SettingsTab(AbstractTab):
         Toggle if the files in the tracked directory are currently being tracked.
         """
         state = self.active_checkbox.isChecked()
-        self.config["SETTINGS"]["Active"] = str(state)
-        with open(self.config_name, "w") as f:
-            self.config.write(f)
+        self.configure.set_active(state)
 
     def change_interval(self):
         """
         Change check interval to user-defined value.
         """
         interval = self.interval_select.value()
-        self.config["SETTINGS"]["CheckInterval"] = str(interval)
-        with open(self.config_name, "w") as f:
-            self.config.write(f)
+        self.configure.set_interval(interval)
 
     def update_ignored_list(self):
         self.clear_ignored_list()

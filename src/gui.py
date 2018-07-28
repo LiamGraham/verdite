@@ -48,7 +48,7 @@ class VersionWindow(QTabWidget):
         dir_path = configure.get_dir_path()
         temp_path = configure.get_temp_path()
         self.manager = manage.FileManager(dir_path, temp_path)
-        
+
         self.init_window()
 
     def init_window(self):
@@ -89,6 +89,7 @@ class VersionWindow(QTabWidget):
         if tab_name not in self.tab_names:
             return
         self.setCurrentIndex(self.tab_names.index(tab_name))
+
 
 class AbstractTab(QWidget):
     """
@@ -388,9 +389,7 @@ class SettingsTab(AbstractTab):
         self.active_checkbox = QCheckBox("Track changes to files in this folder")
         self.active_checkbox.toggled.connect(self.toggle_active)
         self.checked_states = {True: Qt.Checked, False: Qt.Unchecked}
-        initial_state = self.checked_states[
-            self.configure.get_active()
-        ]
+        initial_state = self.checked_states[self.configure.get_active()]
         self.active_checkbox.setCheckState(initial_state)
 
         interval_layout = QHBoxLayout()
@@ -515,9 +514,7 @@ class SettingsTab(AbstractTab):
         row = QHBoxLayout()
         text_label = QLabel(keyword.replace("*", "", 1))
         remove_button = QPushButton("Remove")
-        remove_button.clicked.connect(
-            partial(self.remove_ignored_row, keyword)
-        )
+        remove_button.clicked.connect(partial(self.remove_ignored_row, keyword))
         row.addWidget(text_label)
         row.addWidget(remove_button)
 
@@ -566,7 +563,7 @@ class AboutTab(AbstractTab):
             manager (manage.FileManager): file management interface
         """
         super().__init__(parent, None)
-    
+
     def init_layout(self):
         about_layout = QVBoxLayout()
         about_layout.setAlignment(Qt.AlignTop)
@@ -579,7 +576,6 @@ class AboutTab(AbstractTab):
 
 
 class SystemTrayIcon(QSystemTrayIcon):
-
     def __init__(self, parent):
         self.parent = parent
         icon = QIcon("images\\icon_500px_transparent.png")

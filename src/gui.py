@@ -64,7 +64,7 @@ class VersionWindow(QTabWidget):
         self.addTab(self.settings_tab, self.tab_names[1])
         self.addTab(self.about_tab, self.tab_names[2])
 
-        self.setFixedSize(500, 500)
+        self.setFixedSize(600, 600)
         self.setWindowTitle("View and Restore File Versions")
         self.setWindowIcon(QIcon("images\\icon_500px_transparent.png"))
         self.centre_window()

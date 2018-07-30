@@ -127,6 +127,9 @@ QLabel {
 QLabel#heading {
     font-weight: 500;
 }
+QLabel#body {
+    font-size: 12px;
+}
 QCheckBox {
     font-size: 12px;
     color: rgb(15, 15, 15);

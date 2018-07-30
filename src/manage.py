@@ -1,3 +1,10 @@
+import os
+import shutil
+import datetime
+from dataclasses import dataclass
+from subprocess import call
+from platform import system
+
 try:
     import sh
 except ImportError:
@@ -9,13 +16,6 @@ except ImportError:
             return pbs.Command(attr)
 
     sh = Sh()
-
-import os
-import shutil
-import datetime
-from dataclasses import dataclass
-from subprocess import call
-from platform import system
 
 class FileManager:
     """

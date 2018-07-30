@@ -563,15 +563,40 @@ class AboutTab(AbstractTab):
             manager (manage.FileManager): file management interface
         """
         super().__init__(parent, None)
+        self.init_layout()
 
     def init_layout(self):
         about_layout = QVBoxLayout()
         about_layout.setAlignment(Qt.AlignTop)
 
-        license_label = QLabel("License")
-        license_label.setObjectName("heading")
+        widgets = []
 
-        about_layout.addWidget(license_label)
+        widgets.append(QLabel("About"))
+        widgets[-1].setObjectName("heading")
+        widgets.append(QLabel("Verdite provides the advantages of a sophisticated version " +
+        "control system like git without you having to learn any commands or open a terminal. " +
+        "It automatically detects and stores changes made to files in the selected " +
+        "directory (not unlike products like Google Drive and Dropbox) and allows " +
+        "you to view and restore prior versions of files via the user interface.)"
+        ))
+        widgets[-1].setWordWrap(True)
+        widgets[-1].setObjectName("body")
+        widgets[-1].setAlignment(Qt.AlignJustify)
+
+        widgets.append(QLabel("License"))
+        widgets[-1].setObjectName("heading")
+        widgets.append(QLabel("MIT License"))
+
+        widgets.append(QLabel("Source"))
+        widgets[-1].setObjectName("heading")
+        source_url = "https://github.com/LiamGraham/verdite"
+        widgets.append(QLabel(f"<a href='{source_url}'>{source_url}</a>"))
+        widgets[-1].setTextFormat(Qt.RichText)
+        widgets[-1].setTextInteractionFlags(Qt.TextBrowserInteraction)
+        widgets[-1].setOpenExternalLinks(True)
+
+        for x in widgets:
+            about_layout.addWidget(x)
         self.setLayout(about_layout)
 
 

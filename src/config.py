@@ -11,6 +11,10 @@ class ConfigManager:
     def refresh(self):
         self.config.read(self.config_name)
 
+    def store(self):
+        with open(self.config_name, "w") as f:
+            self.config.write(f)
+
     def get_dir_path(self):
         self.refresh()
         return self.config["DIRECTORIES"]["Main"]
@@ -46,7 +50,3 @@ class ConfigManager:
         """
         self.config["SETTINGS"]["Active"] = str(active)
         self.store()
-
-    def store(self):
-        with open(self.config_name, "w") as f:
-            self.config.write(f)

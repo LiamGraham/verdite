@@ -97,9 +97,7 @@ class FileManager:
             if not line:
                 continue
             line = line.split()
-            print(f"Line: {line}")
             codes = list(line[0]) if line[0] != "??" else ["??"]
-            print(f"Codes: {codes}")
             # git encloses file names containing spaces with double quotes
             # Must remove quotes so file names can be matched
             file_path = " ".join(line[1:]).replace('"', '')

@@ -11,7 +11,7 @@ def control_loop():
         dir_path (str): path of target directory
     """
     configure = config.ConfigManager()
-    dir_path = configure.get_dir_path()
+    dir_path = configure.get_target_path()
     temp_path = configure.get_temp_path()
     interval = configure.get_interval()
 
@@ -24,9 +24,10 @@ def control_loop():
         time.sleep(interval)
         interval = configure.get_interval()
         active = configure.get_active()
-        if configure.get_dir_path() != dir_path:
-            dir_path = config.get_dir_path()
-            manager.set_dir_path(dir_path)
+        if dir_path != configure.get_target_path():
+            dir_path = configure.get_target_path()
+            manager.set_target_directory(dir_path)
+            print(f"Change to {dir_path}")
         if not active or not manager.has_changed():
             print(f"No changes (Active: {active})")
             continue

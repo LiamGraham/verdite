@@ -31,6 +31,10 @@ class FileManager:
             dir_path (str): path of target directory
             temp_path (str): path of temp directory
         """
+        self.set_dir_path(dir_path)
+        self.temp_path = temp_path
+
+    def set_dir_path(self, dir_path):
         self.repo = sh.git.bake(_cwd=dir_path)
         try:
             self.repo("rev-parse", "--is-inside-work-tree")
@@ -39,10 +43,6 @@ class FileManager:
 
         self.dir_path = dir_path
         self.ignore_path = f"{dir_path}\\.gitignore"
-        self.temp_path = temp_path
-
-    def initialise_directory(self):
-        self.repo.init()
 
     def store_changes(self):
         """

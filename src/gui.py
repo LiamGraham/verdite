@@ -45,7 +45,7 @@ class VersionWindow(QTabWidget):
         super(VersionWindow, self).__init__()
 
         configure = config.ConfigManager()
-        dir_path = configure.get_dir_path()
+        dir_path = configure.get_target_path()
         temp_path = configure.get_temp_path()
         self.manager = manage.FileManager(dir_path, temp_path)
 
@@ -376,15 +376,20 @@ class SettingsTab(AbstractTab):
         settings_layout = QVBoxLayout()
         settings_layout.setAlignment(Qt.AlignTop)
 
-        general_layout = QHBoxLayout()
-        general_layout.setAlignment(Qt.AlignLeft)
-        folder_heading = QLabel("General")
-        folder_heading.setObjectName("heading")
+        dir_layout = QHBoxLayout()
+        label_layout = QHBoxLayout()
+        label_layout.setAlignment(Qt.AlignLeft)
+        general_heading = QLabel("General")
+        general_heading.setObjectName("heading")
         folder_label = QLabel(f"Folder location:")
-        dir_label = QLabel(self.manager.dir_path)
-        dir_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        general_layout.addWidget(folder_label)
-        general_layout.addWidget(dir_label)
+        self.dir_label = QLabel(self.manager.dir_path)
+        self.dir_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        change_dir_button = QPushButton("Change")
+        change_dir_button.clicked.connect(self.change_target_dir)
+        label_layout.addWidget(folder_label)
+        label_layout.addWidget(self.dir_label)
+        dir_layout.addLayout(label_layout)        
+        dir_layout.addWidget(change_dir_button)
 
         self.active_checkbox = QCheckBox("Track changes to files in this folder")
         self.active_checkbox.toggled.connect(self.toggle_active)
@@ -439,8 +444,8 @@ class SettingsTab(AbstractTab):
 
         separators = self.generate_separators(1)
 
-        settings_layout.addWidget(folder_heading)
-        settings_layout.addLayout(general_layout)
+        settings_layout.addWidget(general_heading)
+        settings_layout.addLayout(dir_layout)
         settings_layout.addWidget(self.active_checkbox)
         settings_layout.addLayout(interval_layout)
         settings_layout.addWidget(separators[0])
@@ -455,6 +460,23 @@ class SettingsTab(AbstractTab):
         if self.focusWidget() is self.ignore_entry and e.key() == Qt.Key_Return:
             # 'Enter' key is pressed to add new ignore keyword
             self.new_ignored()
+
+    def change_target_dir(self):
+        """
+        Sets the target directory to the one selected by the user using a file dialog.
+        """
+        target_dir = QFileDialog.getExistingDirectory(self, "Select Folder", self.manager.dir_path, 
+            options = QFileDialog.ShowDirsOnly)
+        if not target_dir:
+            return
+
+        if sys.platform == 'win32':
+            # File dialog returns a path with '/', Windows default is '\'
+            target_dir = target_dir.replace("/", "\\")
+
+        self.configure.set_target_path(target_dir)
+        self.manager.set_target_directory(target_dir)
+        self.dir_label.setText(target_dir)
 
     def toggle_active(self):
         """

@@ -388,7 +388,7 @@ class SettingsTab(AbstractTab):
         change_dir_button.clicked.connect(self.change_target_dir)
         label_layout.addWidget(folder_label)
         label_layout.addWidget(self.dir_label)
-        dir_layout.addLayout(label_layout)        
+        dir_layout.addLayout(label_layout)
         dir_layout.addWidget(change_dir_button)
 
         self.active_checkbox = QCheckBox("Track changes to files in this folder")
@@ -465,14 +465,27 @@ class SettingsTab(AbstractTab):
         """
         Sets the target directory to the one selected by the user using a file dialog.
         """
-        target_dir = QFileDialog.getExistingDirectory(self, "Select Folder", self.manager.dir_path, 
-            options = QFileDialog.ShowDirsOnly)
+        target_dir = QFileDialog.getExistingDirectory(
+            self,
+            "Select Folder",
+            self.manager.dir_path,
+            options=QFileDialog.ShowDirsOnly,
+        )
         if not target_dir:
             return
 
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             # File dialog returns a path with '/', Windows default is '\'
             target_dir = target_dir.replace("/", "\\")
+
+        home_dir = os.path.expanduser("~")
+        if not target_dir.startswith(home_dir):
+            truncated_dir = target_dir[:30] + (target_dir[30:] and "...")
+            confirm = self.show_confirmation_dialog(
+                f"{target_dir} is not in your home directory ({home_dir}). Are you sure you want to track this directory?"
+            )
+            if not confirm:
+                return
 
         self.configure.set_target_path(target_dir)
         self.manager.set_target_directory(target_dir)
@@ -595,12 +608,15 @@ class AboutTab(AbstractTab):
 
         widgets.append(QLabel("About"))
         widgets[-1].setObjectName("heading")
-        widgets.append(QLabel("Verdite provides the advantages of a sophisticated version " +
-        "control system like git without you having to learn any commands or open a terminal. " +
-        "It automatically detects and stores changes made to files in the selected " +
-        "directory (not unlike products like Google Drive and Dropbox) and allows " +
-        "you to view and restore prior versions of files via the user interface.)"
-        ))
+        widgets.append(
+            QLabel(
+                "Verdite provides the advantages of a sophisticated version "
+                + "control system like git without you having to learn any commands or open a terminal. "
+                + "It automatically detects and stores changes made to files in the selected "
+                + "directory (not unlike products like Google Drive and Dropbox) and allows "
+                + "you to view and restore prior versions of files via the user interface.)"
+            )
+        )
         widgets[-1].setWordWrap(True)
         widgets[-1].setObjectName("body")
         widgets[-1].setAlignment(Qt.AlignJustify)

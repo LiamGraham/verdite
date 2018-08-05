@@ -24,6 +24,9 @@ def control_loop():
         time.sleep(interval)
         interval = configure.get_interval()
         active = configure.get_active()
+        if config.get_dir_path() != dir_path:
+            dir_path = config.get_dir_path()
+            manager.set_dir_path(dir_path)
         if not active or not manager.has_changed():
             print(f"No changes (Active: {active})")
             continue

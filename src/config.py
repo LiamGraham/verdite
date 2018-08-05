@@ -15,9 +15,9 @@ class ConfigManager:
         with open(self.config_name, "w") as f:
             self.config.write(f)
 
-    def get_dir_path(self):
+    def get_target_path(self):
         self.refresh()
-        return self.config["DIRECTORIES"]["Main"]
+        return self.config["DIRECTORIES"]["Target"]
 
     def get_temp_path(self):
         self.refresh()
@@ -49,4 +49,14 @@ class ConfigManager:
             active (bool): new active state
         """
         self.config["SETTINGS"]["Active"] = str(active)
+        self.store()
+
+    def set_target_path(self, dir_path):
+        """
+        Sets active state to given value.
+
+        Arguments:
+            active (bool): new active state
+        """
+        self.config["DIRECTORIES"]["target"] = dir_path
         self.store()

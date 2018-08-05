@@ -465,27 +465,30 @@ class SettingsTab(AbstractTab):
         """
         Sets the target directory to the one selected by the user using a file dialog.
         """
-        target_dir = QFileDialog.getExistingDirectory(
-            self,
-            "Select Folder",
-            self.manager.dir_path,
-            options=QFileDialog.ShowDirsOnly,
-        )
-        if not target_dir:
-            return
-
-        if sys.platform == "win32":
-            # File dialog returns a path with '/', Windows default is '\'
-            target_dir = target_dir.replace("/", "\\")
-
-        home_dir = os.path.expanduser("~")
-        if not target_dir.startswith(home_dir):
-            truncated_dir = target_dir[:30] + (target_dir[30:] and "...")
-            confirm = self.show_confirmation_dialog(
-                f"{target_dir} is not in your home directory ({home_dir}). Are you sure you want to track this directory?"
+        while True:
+            # Loop if user selects dir not in their home dir and presses 'Cancel' in
+            # confirmation prompt
+            target_dir = QFileDialog.getExistingDirectory(
+                self,
+                "Select Folder",
+                self.manager.dir_path,
+                options=QFileDialog.ShowDirsOnly,
             )
-            if not confirm:
+            if not target_dir:
                 return
+            if sys.platform == "win32":
+                # File dialog returns a path with '/', Windows default is '\'
+                target_dir = target_dir.replace("/", "\\")
+            home_dir = os.path.expanduser("~")
+            if target_dir.startswith(home_dir):
+                break
+            else:
+                truncated_dir = target_dir[:20] + (target_dir[20:] and "...")
+                confirm = self.show_confirmation_dialog(
+                    f"{target_dir} is not in your home directory ({home_dir}). Are you sure you want to track this directory?"
+                )
+                if not confirm:
+                    continue
 
         self.configure.set_target_path(target_dir)
         self.manager.set_target_directory(target_dir)

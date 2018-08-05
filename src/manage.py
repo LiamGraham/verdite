@@ -97,7 +97,9 @@ class FileManager:
             if not line:
                 continue
             line = line.split()
+            print(f"Line: {line}")
             codes = list(line[0]) if line[0] != "??" else ["??"]
+            print(f"Codes: {codes}")
             # git encloses file names containing spaces with double quotes
             # Must remove quotes so file names can be matched
             file_path = " ".join(line[1:]).replace('"', '')
@@ -215,13 +217,17 @@ class FileManager:
 
         Returns (list(str)): code corresponding to change 
         """
-        print(f"File path: {file_path}")
         self.repo.add(file_path)
         changes = self.get_changes()
         for change in changes:
             if change.file_path == file_path:
                 return change.codes
-        return None
+        # Initial file_path is of a directory
+        # No file paths in changes will be equal to file_path, as they will be the paths
+        # of the staged files and not the directory
+        # Initial change code is selected as it should reflect change for whole
+        # directory 
+        return changes[0].codes
 
     def get_all_ignored(self):
         """

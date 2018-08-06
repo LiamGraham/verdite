@@ -483,9 +483,9 @@ class SettingsTab(AbstractTab):
             if target_dir.startswith(home_dir):
                 break
             else:
-                truncated_dir = target_dir[:20] + (target_dir[20:] and "...")
+                truncated_dir = target_dir[:30] + (target_dir[30:] and "...")
                 confirm = self.show_confirmation_dialog(
-                    f"{target_dir} is not in your home directory ({home_dir}). Are you sure you want to track this directory?"
+                    f"{truncated_dir} is not in your home directory ({home_dir}). Are you sure you want to track this directory?"
                 )
                 if not confirm:
                     continue

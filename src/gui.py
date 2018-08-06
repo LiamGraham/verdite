@@ -651,10 +651,10 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     def init_context_menu(self):
         menu = QMenu(self.parent)
-        versionsAction = menu.addAction("View versions")
-        versionsAction.triggered.connect(self.view_versions)
-        settingsAction = menu.addAction("Settings")
-        settingsAction.triggered.connect(self.settings)
+        versions_actions = menu.addAction("View versions")
+        versions_actions.triggered.connect(self.view_versions)
+        settings_actions = menu.addAction("Settings")
+        settings_actions.triggered.connect(self.settings)
         self.setContextMenu(menu)
 
     def view_versions(self):

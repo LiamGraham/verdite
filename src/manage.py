@@ -118,7 +118,7 @@ class FileManager:
         if not os.path.realpath(file_path).startswith(self.dir_path):
             raise VersionError("File is not inside controlled directory")
         try:
-            file_log = self.repo.log("--oneline", file_path).split("\n")
+            file_log = self.repo.log("--oneline", "--follow", file_path).split("\n")
         except pbs.ErrorReturnCode:
             raise VersionError("Unable to retrieve file")
         versions = []
@@ -147,7 +147,6 @@ class FileManager:
         """
         target_ver = self._get_target_version(file_path, version_num)
         try:
-            # FIXME: Breaks if file had different name at given version
             self.repo.checkout(target_ver.c_hash, file_path)
             shutil.copy(file_path, self.temp_path)
             os.startfile(f"{self.temp_path}\\{os.path.split(file_path)[1]}")

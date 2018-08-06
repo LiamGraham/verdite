@@ -105,3 +105,6 @@ venv.bak/
 
 # temp folder
 temp/
+
+# SonarQube
+.scannerwork/

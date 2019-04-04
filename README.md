@@ -1,4 +1,4 @@
-![Verdite Logo](https://github.com/LiamGraham/verdite/blob/master/images/logo_medium.png)
+![Verdite Logo](https://github.com/LiamGraham/verdite/blob/master/images/logo_small.png)
 
 A git-powered automatic version control tool for everday use.
 

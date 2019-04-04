@@ -66,7 +66,7 @@ class VersionWindow(QTabWidget):
 
         self.setFixedSize(600, 600)
         self.setWindowTitle("View and Restore File Versions")
-        self.setWindowIcon(QIcon("images\\icon_500px_transparent.png"))
+        self.setWindowIcon(QIcon("images\\icon_500px.png"))
         self.centre_window()
         self.show()
 
@@ -111,8 +111,8 @@ class AbstractTab(QWidget):
     def get_truncated_file_name(self):
         file_name = os.path.splitext(os.path.basename(self.current_file))[0]
         return (
-            file_name[:15]
-            + (file_name[15:] and "[...]")
+            file_name[:30]
+            + (file_name[30:] and "[...]")
             + os.path.splitext(self.current_file)[1]
         )
 
@@ -617,7 +617,7 @@ class AboutTab(AbstractTab):
                 + "control system like git without you having to learn any commands or open a terminal. "
                 + "It automatically detects and stores changes made to files in the selected "
                 + "directory (not unlike products like Google Drive and Dropbox) and allows "
-                + "you to view and restore prior versions of files via the user interface.)"
+                + "you to view and restore prior versions of files via the user interface."
             )
         )
         widgets[-1].setWordWrap(True)
@@ -644,7 +644,7 @@ class AboutTab(AbstractTab):
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, parent):
         self.parent = parent
-        icon = QIcon("images\\icon_500px_transparent.png")
+        icon = QIcon("images\\icon_500px.png")
         super(QSystemTrayIcon, self).__init__(icon, parent)
         self.init_context_menu()
         self.show()
